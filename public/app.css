@@ -96,9 +96,10 @@ table thead,table tbody,table tr{display:table;width:100%;table-layout:auto}
 }
 
 /* why strip */
-.why{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);background:var(--bg2)}
+.why{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);background:var(--bg2)}
+.why .n{display:block;font-family:"Silkscreen";font-size:11px;color:var(--fg3);margin-bottom:8px}
 .why .w{padding:16px 18px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
-.why .w:nth-child(3n){border-right:0}.why .w:nth-child(n+4){border-bottom:0}
+.why .w{border-bottom:0}.why .w:last-child{border-right:0}
 .why .up{color:var(--org)}.why p{margin:6px 0 0;font-size:12px;line-height:1.5;color:var(--fg2)}.why .w{padding:14px 16px}
 .feed.tall{max-height:520px}
 .chart{padding:0!important;min-height:360px;background:#000;max-height:none!important}.chart iframe{width:100%;height:100%;min-height:360px;border:0;display:block}

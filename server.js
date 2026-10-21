@@ -48,6 +48,8 @@ app.get('/api/coin/:mint', (req, res) => {
 
 app.get('/api/avatar/:h.svg', (req, res) => { res.type('image/svg+xml').set('cache-control', 'public, max-age=86400').send(avatarSvg(req.params.h)); });
 
+app.get('/api/blockhash', async (req, res) => { try { res.json({ blockhash: (await P.connection().getLatestBlockhash()).blockhash }); } catch (e) { res.status(500).json({ error: e.message }); } });
+
 // ---- hire ----
 // 1. POST {persona, boss} -> a fresh dev wallet to fund. 2. boss sends HIRE_SOL. 3. we see it and the dev wakes up.
 app.post('/api/hire', (req, res) => {
