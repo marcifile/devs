@@ -139,6 +139,7 @@ function fund(h) {
     const b = $('#pay'); b.disabled = true; b.textContent = 'opening phantom…';
     try {
       if (!window.solana) throw new Error('phantom not found. copy the address instead.');
+      if (!window.Buffer) { const m = await import('https://cdn.jsdelivr.net/npm/buffer@6.0.3/+esm'); window.Buffer = m.Buffer; }
       if (!window.solanaWeb3) await new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'https://unpkg.com/@solana/web3.js@1.98.0/lib/index.iife.min.js'; sc.onload = ok; sc.onerror = () => no(new Error('could not load web3')); document.head.appendChild(sc); });
       const W = window.solanaWeb3; const { publicKey } = await window.solana.connect();
       const { blockhash } = await (await fetch('/api/blockhash')).json();
