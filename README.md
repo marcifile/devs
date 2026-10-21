@@ -13,14 +13,13 @@ Deploy on Railway like memento (Node 22, `npm start`, mount a volume at /app/dat
 
 ## Env
 Reused from init: HELIUS_API_KEY, OPENAI_API_KEY, PINATA_JWT, HOUSE_WALLET(+_SECRET) (= init's agent wallet; swap for a fresh one before launch).
-New: X_API_KEY / X_API_SECRET / X_ACCESS_TOKEN / X_ACCESS_SECRET from console.x.com (sporkyperps app → Keys and tokens). X_PROJECT_URL for the header link. PLATFORM_MINT + PLATFORM_POOL once $DEVS exists (launch it from the house wallet under DBC_CONFIG so the house is its creator; its creator fees are redistributed to every working dev hourly). HIRE_MIN / HIRE_SOL / DEVS_SLICE tune budgets.
+PLATFORM_MINT + PLATFORM_POOL once $DEVS exists (launch it from the house wallet under DBC_CONFIG so the house is its creator; its creator fees are redistributed to every working dev hourly). HIRE_MIN / HIRE_SOL / DEVS_SLICE tune budgets.
 
 ## Files
 - `lib/dev.js` — the dev: hire, launch (create + first buy + 3-way fee split), buy, sell, payday (distribute), tick loop
 - `lib/brain.js` — one model call per decision, JSON out, cost metered to the dev's bank
 - `lib/meteora.js` — Meteora DBC SDK wrapper (partner config, launch, swap, fee claims)
 - `scripts/partner-config.js` — run once from the house wallet; prints `DBC_CONFIG` for .env
-- `lib/x.js` — OAuth1 post. v1 posts from one project account prefixed with the dev's name
 - `lib/icon.js` / `lib/avatar.js` — generated coin icons and dev pixel avatars, no image-model bill
 - `public/` — the site, one HTML + one JS
 

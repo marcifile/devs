@@ -4,7 +4,6 @@ import { fileURLToPath } from 'node:url';
 import { db, log } from './lib/db.js';
 import * as D from './lib/dev.js';
 import * as P from './lib/meteora.js';
-import { xReady } from './lib/x.js';
 import { avatarSvg } from './lib/avatar.js';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -28,7 +27,8 @@ app.get('/api/state', (req, res) => {
       (select coalesce(sum(sol),0) from payouts where role='boss') to_bosses,
       (select coalesce(sum(sol),0) from payouts where role='house') to_house,
       (select coalesce(sum(fees_sol),0) from coins) fees`).get();
-  res.json({ devs, coins, events, payouts, totals: t, pending: db.prepare("select count(*) c from devs where status='pending'").get().c, split: { boss: D.BOSS_BPS / 100, dev: D.DEV_BPS / 100, house: D.HOUSE_BPS / 100 }, hire_sol: D.HIRE_SOL, hire_min: D.HIRE_MIN, sol_usd: Number(process.env.SOL_USD || 180), devs_slice: D.DEVS_SLICE, x: xReady(), site: process.env.SITE_URL, project_x: process.env.X_PROJECT_URL || null, ca: process.env.PLATFORM_MINT || null });
+  const posts = db.prepare("select e.id, e.text, e.at, e.mint, d.name dev_name, d.handle dev_handle, c.ticker from events e join devs d on d.id=e.dev_id left join coins c on c.mint=e.mint where e.kind='posted' order by e.at desc limit 150").all();
+  res.json({ devs, coins, events, payouts, posts, totals: t, pending: db.prepare("select count(*) c from devs where status='pending'").get().c, split: { boss: D.BOSS_BPS / 100, dev: D.DEV_BPS / 100, house: D.HOUSE_BPS / 100 }, hire_sol: D.HIRE_SOL, hire_min: D.HIRE_MIN, sol_usd: Number(process.env.SOL_USD || 180), devs_slice: D.DEVS_SLICE, site: process.env.SITE_URL, project_x: process.env.X_PROJECT_URL || null, ca: process.env.PLATFORM_MINT || null });
 });
 app.get('/api/dev/:handle', (req, res) => {
   const d = db.prepare('select * from devs where handle=? or name=?').get(req.params.handle, req.params.handle);
@@ -84,6 +84,6 @@ for (const p of ['/dev/:h', '/c/:m', '/hire', '/how']) app.get(p, (req, res) => 
 
 const port = Number(process.env.PORT || 8791);
 app.listen(port, () => {
-  console.log(`devs on http://localhost:${port} · split boss ${D.BOSS_BPS / 100}% dev ${D.DEV_BPS / 100}% house ${D.HOUSE_BPS / 100}% · meteora config ${process.env.DBC_CONFIG ? 'set' : 'MISSING (run scripts/partner-config.js)'} · x ${xReady() ? 'on' : 'off'} · rpc ${P.rpcState().using}`);
+  console.log(`devs on http://localhost:${port} · split boss ${D.BOSS_BPS / 100}% dev ${D.DEV_BPS / 100}% house ${D.HOUSE_BPS / 100}% · meteora config ${process.env.DBC_CONFIG ? 'set' : 'MISSING (run scripts/partner-config.js)'} · rpc ${P.rpcState().using}`);
   D.startLoop();
 });
