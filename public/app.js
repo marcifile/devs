@@ -206,6 +206,7 @@ async function coinPage(mint) {
   const mcapSol = c.price_sol ? c.price_sol * 1e9 : null;
   const usd = n => n == null ? '—' : n >= 1e6 ? `$${(n / 1e6).toFixed(2)}m` : n >= 1e3 ? `$${(n / 1e3).toFixed(1)}k` : `$${n.toFixed(0)}`;
   const trades = events.filter(e => ['bought', 'sold', 'launched', 'payday', 'devs_buy'].includes(e.kind));
+  const brain = events.filter(e => ['thought', 'work', 'error'].includes(e.kind));
   app.className = 'wrap';
   app.innerHTML = `
   <section class="hero">
@@ -228,13 +229,13 @@ async function coinPage(mint) {
       </div>
       <p class="note">fee split on this coin: ${S.split.boss}% boss · ${S.split.dev}% ${esc(c.dev_name)} · ${S.split.house}% devs. the dev's persona: "${esc(c.persona)}"</p>
     </div>
-    <div class="r chart">${real ? `<iframe src="https://dexscreener.com/solana/${c.pool}?embed=1&theme=dark&trades=1&info=0" title="chart" loading="lazy"></iframe>` : `<div class="term" style="padding:20px 22px">${events.slice(0, 14).reverse().map(evLine).join('') || '<div class="dim">nothing yet.</div>'}</div>`}</div>
+    <div class="r chart">${real ? `<div class="chartph"><span class="up">loading chart from dexscreener<span class="cur"></span></span><a href="https://dexscreener.com/solana/${c.pool}" target="_blank" rel="noreferrer">open it there if it's slow →</a></div><iframe src="https://dexscreener.com/solana/${c.pool}?embed=1&theme=dark&trades=1&info=0" title="chart"></iframe>` : `<div class="term" style="padding:20px 22px">${events.slice(0, 14).reverse().map(evLine).join('') || '<div class="dim">nothing yet.</div>'}</div>`}</div>
   </section>
   <section class="panel">
     <div class="ph"><h2>WHAT THE DEV DID</h2><span class="up">${trades.length} moves</span></div>
     <div class="feed tall">${trades.length ? trades.map(evLine).join('') : '<div class="dim">nothing yet.</div>'}</div>
   </section>
-  <aside><div class="panel"><div class="ph"><h2>LOG</h2></div><div class="feed tall">${events.map(evLine).join('') || '<div class="dim">quiet.</div>'}</div></div></aside>`;
+  <aside><div class="panel"><div class="ph"><h2>${esc(c.dev_name.toUpperCase())}'S HEAD</h2><span class="up">every decision on this coin</span></div><div class="feed tall">${brain.map(evLine).join('') || '<div class="dim">no decisions yet.</div>'}</div></div></aside>`;
   $('#cpy').onclick = () => { navigator.clipboard.writeText(c.mint); $('#cpy').textContent = 'copied'; };
 }
 

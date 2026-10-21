@@ -41,7 +41,7 @@ app.get('/api/dev/:handle', (req, res) => {
 app.get('/api/coin/:mint', (req, res) => {
   const c = db.prepare('select c.*, d.name dev_name, d.handle dev_handle, d.persona from coins c join devs d on d.id=c.dev_id where mint=?').get(req.params.mint);
   if (!c) return res.status(404).json({ error: 'no such coin' });
-  const events = db.prepare('select e.*, d.name dev_name from events e left join devs d on d.id=e.dev_id where e.mint=? order by at desc limit 100').all(req.params.mint);
+  const events = db.prepare("select e.*, d.name dev_name, d.handle dev_handle from events e left join devs d on d.id=e.dev_id where e.mint=? or (e.dev_id=? and e.kind in ('thought','work','error') and e.at>=?) order by at desc limit 150").all(req.params.mint, c.dev_id, c.created_at - 120e3);
   const holders = db.prepare('select count(*) c from holdings where mint=? and amount>0').get(req.params.mint).c;
   res.json({ coin: c, events, holders, sol_usd: Number(process.env.SOL_USD || 180) });
 });
