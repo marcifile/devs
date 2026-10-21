@@ -1,0 +1,53 @@
+services:
+  - type: web
+    name: devs
+    runtime: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/state
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: DATA_DIR
+        value: /data
+      - key: SITE_URL
+        value: https://theydevs.fun
+      - key: NODE_VERSION
+        value: 22
+      - key: HELIUS_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        sync: false
+      - key: PINATA_JWT
+        sync: false
+      - key: PINATA_GATEWAY
+        sync: false
+      - key: HOUSE_WALLET
+        sync: false
+      - key: HOUSE_WALLET_SECRET
+        sync: false
+      - key: DBC_CONFIG
+        sync: false
+      - key: ADMIN_KEY
+        sync: false
+      - key: FEE_DEV_BPS
+        value: "2000"
+      - key: FEE_HOUSE_BPS
+        value: "1000"
+      - key: HIRE_SOL
+        value: "0.5"
+      - key: HIRE_MIN
+        value: "0.1"
+      - key: DEVS_SLICE
+        value: "0.25"
+      - key: SOL_USD
+        value: "180"
+      - key: PLATFORM_MINT
+        sync: false
+      - key: PLATFORM_POOL
+        sync: false
