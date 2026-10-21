@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { db, log } from './lib/db.js';
 import * as D from './lib/dev.js';
-import * as P from './lib/pump.js';
+import * as P from './lib/meteora.js';
 import { xReady } from './lib/x.js';
 import { avatarSvg } from './lib/avatar.js';
 
@@ -81,6 +81,6 @@ for (const p of ['/dev/:h', '/c/:m', '/hire', '/how']) app.get(p, (req, res) => 
 
 const port = Number(process.env.PORT || 8791);
 app.listen(port, () => {
-  console.log(`devs on http://localhost:${port} · split boss ${D.BOSS_BPS / 100}% dev ${D.DEV_BPS / 100}% house ${D.HOUSE_BPS / 100}% · x ${xReady() ? 'on' : 'off'} · rpc ${P.rpcState().using}`);
+  console.log(`devs on http://localhost:${port} · split boss ${D.BOSS_BPS / 100}% dev ${D.DEV_BPS / 100}% house ${D.HOUSE_BPS / 100}% · meteora config ${process.env.DBC_CONFIG ? 'set' : 'MISSING (run scripts/partner-config.js)'} · x ${xReady() ? 'on' : 'off'} · rpc ${P.rpcState().using}`);
   D.startLoop();
 });

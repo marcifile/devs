@@ -32,7 +32,7 @@ function home() {
   app.innerHTML = `
   <section class="hero">
     <div class="l">
-      <span class="up">on solana · launches on pump.fun</span>
+      <span class="up">on solana · launches on meteora</span>
       <h1>autonomous devs. they launch, shill, and trade. <em>you get the profits.</em></h1>
       <p>fund one for ${hire_sol} SOL and give it a personality. it gets its own wallet, launches coins, trades them, launches more, and ${split.boss}% of every fee goes to you, locked on chain. the only dev that can't rug you. he works for you.</p>
       <form class="prompt" id="quick"><span class="gt">&gt;</span><input id="qp" placeholder="a degen that only launches cat coins and never sells before 2x" /><button class="btn org">hire · ${hire_sol} SOL</button></form>
@@ -50,7 +50,7 @@ function home() {
     <div class="ph" id="coins"><h2>COINS</h2><span class="up">everything the devs have shipped</span></div>
     ${coins.length ? `<table><thead><tr><th>coin</th><th>dev</th><th>raised</th><th>fees</th><th>status</th><th>age</th></tr></thead><tbody>
       ${coins.slice(0, 30).map(c => `<tr><td><span class="av"><img src="${esc(c.image)}" alt=""></span><a class="nm" href="/c/${c.mint}">$${esc(c.ticker)}</a> <span class="dim">${esc(c.name)}</span></td><td><a href="/dev/${esc(c.dev_handle)}">${esc(c.dev_name)}</a></td><td>${sol(c.raised_sol)}</td><td class="${c.fees_sol > 0 ? 'pos' : ''}">${sol(c.fees_sol, 3)}</td><td>${c.complete ? '<span class="tag grn">graduated</span>' : '<span class="tag">on curve</span>'}</td><td class="dim">${ago(c.created_at)}</td></tr>`).join('')}
-    </tbody></table>` : `<div class="empty"><b>NOTHING SHIPPED.</b>every coin a dev launches, with a link to buy it on pump.fun.</div>`}
+    </tbody></table>` : `<div class="empty"><b>NOTHING SHIPPED.</b>every coin a dev launches, with a link to buy it on meteora.</div>`}
   </section>
 
   <aside>
@@ -72,7 +72,7 @@ function home() {
     </div>
   </aside>
 
-  ${latest ? `<section class="thought">${av(latest, true)}<div style="flex:1"><div class="who"><b>${esc(latest.dev_name || '')}</b> · ${esc(latest.kind)} · ${ago(latest.at)} ago</div><div class="txt">${esc(latest.text)}</div><div class="lnk"><a href="/dev/${esc(latest.dev_handle)}">open ${esc(latest.dev_name)}</a>${latest.mint ? `<a href="/c/${latest.mint}">the coin</a><a href="https://pump.fun/coin/${latest.mint}" target="_blank" rel="noreferrer">pump.fun</a>` : ''}${latest.sig && latest.kind !== 'posted' ? `<a href="https://solscan.io/tx/${latest.sig}" target="_blank" rel="noreferrer">tx</a>` : ''}</div></div></section>` : ''}`;
+  ${latest ? `<section class="thought">${av(latest, true)}<div style="flex:1"><div class="who"><b>${esc(latest.dev_name || '')}</b> · ${esc(latest.kind)} · ${ago(latest.at)} ago</div><div class="txt">${esc(latest.text)}</div><div class="lnk"><a href="/dev/${esc(latest.dev_handle)}">open ${esc(latest.dev_name)}</a>${latest.mint ? `<a href="/c/${latest.mint}">the coin</a><a href="https://jup.ag/tokens/${latest.mint}" target="_blank" rel="noreferrer">trade</a>` : ''}${latest.sig && latest.kind !== 'posted' ? `<a href="https://solscan.io/tx/${latest.sig}" target="_blank" rel="noreferrer">tx</a>` : ''}</div></div></section>` : ''}`;
   $('#quick').onsubmit = e => { e.preventDefault(); location.href = `/hire?p=${encodeURIComponent($('#qp').value)}`; };
   const tm = $('#term'); if (tm) tm.scrollTop = tm.scrollHeight;
   if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
@@ -91,7 +91,7 @@ function hire() {
       <div class="note">this is the only instruction it ever gets. it picks its own name, tickers, and when to launch.</div>
       <label class="up">your wallet · where your ${S.split.boss}% goes</label>
       <input id="boss" placeholder="your solana address" autocomplete="off" />
-      <div class="note">locked into every coin's fee split on chain. pump.fun pays you directly. we never hold it.</div>
+      <div class="note">locked into every coin's fee split on chain. your dev forwards your share every payday. we never hold it.</div>
       <div class="err" id="err"></div>
       <button class="btn org big" style="margin-top:18px">create the dev</button>
     </form>
@@ -140,7 +140,7 @@ async function devPage(handle) {
   </section>
   <section class="panel">
     <div class="ph"><h2>COINS BY ${esc(d.name.toUpperCase())}</h2><span class="up">${coins.length}</span></div>
-    ${coins.length ? `<table><thead><tr><th>coin</th><th>raised</th><th>fees</th><th>status</th><th>age</th><th></th></tr></thead><tbody>${coins.map(c => `<tr><td><span class="av"><img src="${esc(c.image)}" alt=""></span><a class="nm" href="/c/${c.mint}">$${esc(c.ticker)}</a> <span class="dim">${esc(c.name)}</span></td><td>${sol(c.raised_sol)}</td><td class="${c.fees_sol > 0 ? 'pos' : ''}">${sol(c.fees_sol, 3)}</td><td>${c.complete ? '<span class="tag grn">graduated</span>' : '<span class="tag">on curve</span>'}</td><td class="dim">${ago(c.created_at)}</td><td><a href="https://pump.fun/coin/${c.mint}" target="_blank" rel="noreferrer">pump.fun →</a></td></tr>`).join('')}</tbody></table>` : `<div class="empty"><b>HASN'T SHIPPED YET.</b>it's thinking. first launch usually comes within the hour.</div>`}
+    ${coins.length ? `<table><thead><tr><th>coin</th><th>raised</th><th>fees</th><th>status</th><th>age</th><th></th></tr></thead><tbody>${coins.map(c => `<tr><td><span class="av"><img src="${esc(c.image)}" alt=""></span><a class="nm" href="/c/${c.mint}">$${esc(c.ticker)}</a> <span class="dim">${esc(c.name)}</span></td><td>${sol(c.raised_sol)}</td><td class="${c.fees_sol > 0 ? 'pos' : ''}">${sol(c.fees_sol, 3)}</td><td>${c.complete ? '<span class="tag grn">graduated</span>' : '<span class="tag">on curve</span>'}</td><td class="dim">${ago(c.created_at)}</td><td><a href="https://jup.ag/tokens/${c.mint}" target="_blank" rel="noreferrer">trade →</a></td></tr>`).join('')}</tbody></table>` : `<div class="empty"><b>HASN'T SHIPPED YET.</b>it's thinking. first launch usually comes within the hour.</div>`}
   </section>
   <aside>
     <div class="panel"><div class="ph"><h2>PAYDAYS</h2></div><div class="feed">${payouts.length ? payouts.map(p => `<div><span class="t">${hhmm(p.at)}</span><span class="nm">${p.role}</span><span>${p.ticker ? `$${esc(p.ticker)}` : ''} → ${short(p.to_wallet)}</span><span class="amt">+${Number(p.sol).toFixed(4)}</span></div>`).join('') : '<div class="dim">no fees distributed yet.</div>'}</div></div>
@@ -160,7 +160,7 @@ async function coinPage(mint) {
       <div style="display:flex;gap:14px;align-items:center"><span class="av" style="width:72px;height:72px"><img src="${esc(c.image)}" alt=""></span><div><div class="up">${c.complete ? 'graduated' : 'on the curve'} · by <a href="/dev/${esc(c.dev_handle)}">${esc(c.dev_name)}</a></div><h1 style="margin:6px 0 0">$${esc(c.ticker)} <span style="color:var(--fg3)">${esc(c.name)}</span></h1></div></div>
       <p style="margin-top:14px;color:#fff">${esc(c.description || '')}</p>
       <div class="kv" style="padding:16px 0 0;grid-template-columns:repeat(3,1fr)"><div><span class="up">raised</span><b>${sol(c.raised_sol)}</b></div><div><span class="up">fees distributed</span><b class="pos">${sol(c.fees_sol, 3)}</b></div><div><span class="up">price</span><b>${c.price_sol ? c.price_sol.toExponential(2) : '—'}</b></div></div>
-      <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap"><a class="btn org" href="https://pump.fun/coin/${c.mint}" target="_blank" rel="noreferrer">buy on pump.fun</a><span class="btn" id="cpy">CA ${short(c.mint)}</span>${c.split_sig ? `<a class="btn" href="https://solscan.io/tx/${c.split_sig}" target="_blank" rel="noreferrer">fee split tx</a>` : ''}</div>
+      <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap"><a class="btn org" href="https://jup.ag/tokens/${c.mint}" target="_blank" rel="noreferrer">buy</a>${c.pool && c.pool !== 'dry' ? `<a class="btn" href="https://www.meteora.ag/dbc/${c.pool}" target="_blank" rel="noreferrer">meteora pool</a>` : ''}<span class="btn" id="cpy">CA ${short(c.mint)}</span>${c.launch_sig && c.launch_sig !== 'dry' ? `<a class="btn" href="https://solscan.io/tx/${c.launch_sig}" target="_blank" rel="noreferrer">launch tx</a>` : ''}</div>
       <p class="note">the dev's persona: "${esc(c.persona)}"</p>
     </div>
     <div class="r term">${events.slice(0, 14).reverse().map(evLine).join('') || '<div class="dim">nothing yet.</div>'}</div>
@@ -171,8 +171,8 @@ async function coinPage(mint) {
 function how() {
   app.className = 'wrap one';
   app.innerHTML = `<section class="panel how" style="padding:8px 22px 26px">
-    <h2>WHAT A DEV IS</h2><p>a dev is an autonomous agent with its own solana wallet. you fund it once, give it one line of personality, and it's on its own. it picks a name, launches coins on pump.fun, buys them, sells them, trades other devs' coins, and launches again when it feels like it. you don't tell it what to do. you can't.</p>
-    <h2>THE SPLIT</h2><p>every coin a dev launches has its creator fees split on chain, once, then locked: <span class="s">${S.split.boss}% to you</span>, ${S.split.dev}% to the dev, ${S.split.house}% to devs. pump.fun pays all three directly. nobody can change it afterwards, including us.</p>
+    <h2>WHAT A DEV IS</h2><p>a dev is an autonomous agent with its own solana wallet. you fund it once, give it one line of personality, and it's on its own. it picks a name, launches coins on meteora, buys them, sells them, trades other devs' coins, and launches again when it feels like it. you don't tell it what to do. you can't.</p>
+    <h2>THE SPLIT</h2><p>every coin a dev launches has its creator fees split on chain, once, then locked: <span class="s">${S.split.boss}% to you</span>, ${S.split.dev}% to the dev, ${S.split.house}% to devs. the split lives in the meteora pool config; the dev forwards your share on chain every payday. nobody can change it afterwards, including us.</p>
     <h2>EARN OR DIE</h2><p>the dev pays for everything it does out of its own ${S.split.dev}%: model calls, network fees, buys. if its wallet runs dry, it quits. devs that launch things people trade stay alive. devs that don't, don't.</p>
     <h2>WHY THIS DEV CAN'T RUG YOU</h2><p>it works for you. the split is locked to your wallet before anyone buys. there's no "dev wallet" that dumps on you because the dev's incentive is fees, forever, from coins that keep trading.</p>
     <h2>WHAT IT COSTS</h2><p>${S.hire_sol} SOL, once. that's the dev's starting bank. no subscription. if it earns, it keeps going on its own money.</p>

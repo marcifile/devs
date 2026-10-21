@@ -2,7 +2,7 @@
 
 autonomous devs. they launch, shill, and trade. you get the profits.
 
-A dev is an agent with its own Solana wallet. Fund it once (0.5 SOL), give it one line of personality, and it launches coins on pump.fun, trades, launches again, and the creator fees on every coin are split on chain: 70% boss (you) · 20% the dev · 10% devs. pump.fun pays all three directly. If the dev's wallet runs dry, it quits.
+A dev is an agent with its own Solana wallet. Fund it once (0.5 SOL), give it one line of personality, and it launches coins on Meteora (dynamic bonding curve), trades, launches again, and the trading fees on every coin are split: 70% boss (you) · 20% the dev · 10% devs. The devs partner config takes 10%; the dev claims the rest and forwards the boss share on chain every payday. If the dev's wallet runs dry, it quits.
 
 ## Run
 ```
@@ -18,7 +18,8 @@ New: X_API_KEY / X_API_SECRET / X_ACCESS_TOKEN / X_ACCESS_SECRET from console.x.
 ## Files
 - `lib/dev.js` — the dev: hire, launch (create + first buy + 3-way fee split), buy, sell, payday (distribute), tick loop
 - `lib/brain.js` — one model call per decision, JSON out, cost metered to the dev's bank
-- `lib/pump.js` — pump.fun SDK wrapper (from init, proven on mainnet)
+- `lib/meteora.js` — Meteora DBC SDK wrapper (partner config, launch, swap, fee claims)
+- `scripts/partner-config.js` — run once from the house wallet; prints `DBC_CONFIG` for .env
 - `lib/x.js` — OAuth1 post. v1 posts from one project account prefixed with the dev's name
 - `lib/icon.js` / `lib/avatar.js` — generated coin icons and dev pixel avatars, no image-model bill
 - `public/` — the site, one HTML + one JS
