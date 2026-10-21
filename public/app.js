@@ -182,12 +182,22 @@ async function devPage(handle) {
   </section>
   <section class="panel">
     <div class="ph"><h2>COINS BY ${esc(d.name.toUpperCase())}</h2><span class="up">${coins.length}</span></div>
-    ${coins.length ? `<table><thead><tr><th>coin</th><th>raised</th><th>fees</th><th>status</th><th>age</th><th></th></tr></thead><tbody>${coins.map(c => `<tr><td><span class="av"><img src="${esc(c.image)}" alt=""></span><a class="nm" href="/c/${c.mint}">$${esc(c.ticker)}</a> <span class="dim">${esc(c.name)}</span></td><td>${sol(c.raised_sol)}</td><td class="${c.fees_sol > 0 ? 'pos' : ''}">${sol(c.fees_sol, 3)}</td><td>${c.complete ? '<span class="tag grn">graduated</span>' : '<span class="tag">on curve</span>'}</td><td class="dim">${ago(c.created_at)}</td><td><a href="https://jup.ag/tokens/${c.mint}" target="_blank" rel="noreferrer">trade →</a></td></tr>`).join('')}</tbody></table>` : `<div class="empty"><b>HASN'T SHIPPED YET.</b>it's thinking. first launch usually comes within the hour.</div>`}
+    ${coins.length ? `<table><thead><tr><th>coin</th><th>raised</th><th>fees</th><th>status</th><th>age</th><th></th></tr></thead><tbody>${coins.map(c => `<tr><td><span class="av"><img src="${esc(c.image)}" alt=""></span><a class="nm" href="/c/${c.mint}">$${esc(c.ticker)}</a> <span class="dim">${esc(c.name)}</span></td><td>${sol(c.raised_sol)}</td><td class="${c.fees_sol > 0 ? 'pos' : ''}">${sol(c.fees_sol, 3)}</td><td>${c.complete ? '<span class="tag grn">graduated</span>' : '<span class="tag">on curve</span>'}</td><td class="dim">${ago(c.created_at)}</td><td><a href="https://jup.ag/tokens/${c.mint}" target="_blank" rel="noreferrer">trade →</a></td></tr>`).join('')}</tbody></table>` : progress(d, events)}
   </section>
   <aside>
     <div class="panel"><div class="ph"><h2>PAYDAYS</h2></div><div class="feed">${payouts.length ? payouts.map(p => `<div><span class="t">${hhmm(p.at)}</span><span class="nm">${p.role}</span><span>${p.ticker ? `$${esc(p.ticker)}` : ''} → ${short(p.to_wallet)}</span><span class="amt">+${Number(p.sol).toFixed(4)}</span></div>`).join('') : '<div class="dim">no fees distributed yet.</div>'}</div></div>
     <div class="panel" style="margin-top:16px"><div class="ph"><h2>LOG</h2></div><div class="feed">${events.map(e => `<div><span class="t">${hhmm(e.at)}</span><span class="${e.kind === 'error' ? 'neg' : e.kind === 'thought' ? 'nm' : ''}">${esc(e.text)}</span></div>`).join('')}</div></div>
   </aside>`;
+}
+
+// Before the first coin: a progress bar through wake → name → think → launch.
+function progress(d, events) {
+  const has = k => events.some(e => e.kind === k);
+  const steps = [['funded', d.status !== 'pending'], ['named itself', has('hired')], ['thinking', has('thought')], ['launching', has('launched')]];
+  const done = steps.filter(s => s[1]).length;
+  const eta = d.next_action_at ? Math.max(0, Math.round((d.next_action_at - Date.now()) / 60000)) : null;
+  const label = d.status === 'pending' ? 'waiting for the SOL to land' : d.status === 'quit' ? 'quit before shipping' : done < 3 ? 'waking up' : eta != null && eta > 0 ? `next decision in ${eta}m` : 'deciding now';
+  return `<div class="prog"><div class="bar"><i style="width:${Math.max(8, (done / steps.length) * 100)}%"></i></div><div class="steps">${steps.map(([t, ok], i) => `<span class="${ok ? 'ok' : i === done ? 'now' : ''}">${t}</span>`).join('')}</div><div class="note">${label}<span class="cur"></span> · the first coin usually ships within a few minutes of waking. generating the icon and sending the launch tx takes about a minute.</div></div>`;
 }
 
 // ---------- coin page ----------
@@ -221,7 +231,7 @@ async function coinPage(mint) {
       </div>
       <p class="note">fee split on this coin: ${S.split.boss}% boss · ${S.split.dev}% ${esc(c.dev_name)} · ${S.split.house}% devs. the dev's persona: "${esc(c.persona)}"</p>
     </div>
-    <div class="r chart">${real ? `<iframe src="https://dexscreener.com/solana/${c.pool}?embed=1&theme=dark&trades=0&info=0" title="chart" loading="lazy"></iframe>` : `<div class="term" style="padding:20px 22px">${events.slice(0, 14).reverse().map(evLine).join('') || '<div class="dim">nothing yet.</div>'}</div>`}</div>
+    <div class="r chart">${real ? `<iframe src="https://dexscreener.com/solana/${c.pool}?embed=1&theme=dark&trades=1&info=0" title="chart" loading="lazy"></iframe>` : `<div class="term" style="padding:20px 22px">${events.slice(0, 14).reverse().map(evLine).join('') || '<div class="dim">nothing yet.</div>'}</div>`}</div>
   </section>
   <section class="panel">
     <div class="ph"><h2>WHAT THE DEV DID</h2><span class="up">${trades.length} moves</span></div>
@@ -258,4 +268,4 @@ async function render() {
   else notFound();
 }
 render();
-setInterval(() => { if (route() === '/' || route().startsWith('/dev/') || route().startsWith('/c/')) render(); }, 20000);
+setInterval(() => { if (route() === '/' || route().startsWith('/dev/') || route().startsWith('/c/')) render(); }, route().startsWith('/dev/') ? 8000 : 20000);

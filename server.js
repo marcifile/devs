@@ -81,6 +81,17 @@ app.post('/api/admin/payday/:handle', admin, async (req, res) => {
   await D.payday(d); res.json({ ok: true });
 });
 
+app.delete('/api/admin/coin/:mint', admin, (req, res) => {
+  const m = req.params.mint;
+  db.prepare('delete from payouts where mint=?').run(m); db.prepare('delete from events where mint=?').run(m); db.prepare('delete from holdings where mint=?').run(m);
+  const r = db.prepare('delete from coins where mint=?').run(m); res.json({ ok: true, deleted: r.changes });
+});
+app.delete('/api/admin/dev/:handle', admin, (req, res) => {
+  const d = db.prepare('select id from devs where handle=?').get(req.params.handle); if (!d) return res.status(404).json({ error: 'no such dev' });
+  for (const t of ['payouts', 'events', 'holdings', 'coins']) db.prepare(`delete from ${t} where dev_id=?`).run(d.id);
+  db.prepare('delete from devs where id=?').run(d.id); res.json({ ok: true });
+});
+
 // pages
 for (const p of ['/dev/:h', '/c/:m', '/hire', '/how']) app.get(p, (req, res) => res.sendFile(path.join(ROOT, 'public', 'index.html')));
 
