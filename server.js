@@ -18,8 +18,8 @@ const pub = d => d && ({ id: d.id, handle: d.handle, name: d.name, persona: d.pe
 app.get('/api/state', (req, res) => {
   const devs = db.prepare("select * from devs where status<>'pending' order by earned_sol desc, created_at asc").all().map(pub);
   const coins = db.prepare('select c.*, d.name dev_name, d.handle dev_handle from coins c join devs d on d.id=c.dev_id order by c.created_at desc limit 200').all();
-  const events = db.prepare('select e.*, d.name dev_name, d.handle dev_handle from events e left join devs d on d.id=e.dev_id order by e.at desc limit 60').all();
-  const payouts = db.prepare('select p.*, d.name dev_name, c.ticker from payouts p join devs d on d.id=p.dev_id left join coins c on c.mint=p.mint order by p.at desc limit 60').all();
+  const events = db.prepare('select e.*, d.name dev_name, d.handle dev_handle from events e left join devs d on d.id=e.dev_id order by e.at desc limit 250').all();
+  const payouts = db.prepare('select p.*, d.name dev_name, d.handle dev_handle, c.ticker from payouts p join devs d on d.id=p.dev_id left join coins c on c.mint=p.mint order by p.at desc limit 150').all();
   const t = db.prepare(`select
       (select count(*) from devs where status<>'pending') devs,
       (select count(*) from devs where status='shipping') shipping,
@@ -28,7 +28,7 @@ app.get('/api/state', (req, res) => {
       (select coalesce(sum(sol),0) from payouts where role='boss') to_bosses,
       (select coalesce(sum(sol),0) from payouts where role='house') to_house,
       (select coalesce(sum(fees_sol),0) from coins) fees`).get();
-  res.json({ devs, coins, events, payouts, totals: t, pending: db.prepare("select count(*) c from devs where status='pending'").get().c, split: { boss: D.BOSS_BPS / 100, dev: D.DEV_BPS / 100, house: D.HOUSE_BPS / 100 }, hire_sol: D.HIRE_SOL, hire_min: D.HIRE_MIN, devs_slice: D.DEVS_SLICE, x: xReady(), site: process.env.SITE_URL, project_x: process.env.X_PROJECT_URL || null, ca: process.env.PLATFORM_MINT || null });
+  res.json({ devs, coins, events, payouts, totals: t, pending: db.prepare("select count(*) c from devs where status='pending'").get().c, split: { boss: D.BOSS_BPS / 100, dev: D.DEV_BPS / 100, house: D.HOUSE_BPS / 100 }, hire_sol: D.HIRE_SOL, hire_min: D.HIRE_MIN, sol_usd: Number(process.env.SOL_USD || 180), devs_slice: D.DEVS_SLICE, x: xReady(), site: process.env.SITE_URL, project_x: process.env.X_PROJECT_URL || null, ca: process.env.PLATFORM_MINT || null });
 });
 app.get('/api/dev/:handle', (req, res) => {
   const d = db.prepare('select * from devs where handle=? or name=?').get(req.params.handle, req.params.handle);
@@ -42,7 +42,8 @@ app.get('/api/coin/:mint', (req, res) => {
   const c = db.prepare('select c.*, d.name dev_name, d.handle dev_handle, d.persona from coins c join devs d on d.id=c.dev_id where mint=?').get(req.params.mint);
   if (!c) return res.status(404).json({ error: 'no such coin' });
   const events = db.prepare('select e.*, d.name dev_name from events e left join devs d on d.id=e.dev_id where e.mint=? order by at desc limit 100').all(req.params.mint);
-  res.json({ coin: c, events });
+  const holders = db.prepare('select count(*) c from holdings where mint=? and amount>0').get(req.params.mint).c;
+  res.json({ coin: c, events, holders, sol_usd: Number(process.env.SOL_USD || 180) });
 });
 
 app.get('/api/avatar/:h.svg', (req, res) => { res.type('image/svg+xml').set('cache-control', 'public, max-age=86400').send(avatarSvg(req.params.h)); });

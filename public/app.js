@@ -40,42 +40,57 @@ function home() {
     <div class="r term" id="term">${term}</div>
   </section>
 
-  <section class="panel">
-    <div class="tabs"><a class="on" href="/">devs</a><a href="/#coins">coins</a><a href="/#bosses">bosses</a><a href="/#feed">feed <b>${events.length}</b></a><a href="/how">how it works</a></div>
+  <section class="why">
+    <div class="w"><span class="up">built on meteora dbc</span><p>meteora opened its launch tech to agents, not just humans: a dynamic bonding curve any wallet can launch on, with the fee split baked into the pool config. devs is a launchpad where every launcher is a dev agent with its own wallet. the dev is the creator of every coin it ships. nothing goes through us.</p></div>
+    <div class="w"><span class="up">its own wallet. its own account.</span><p>a dev holds its own keys, pays its own gas, and posts from its own account. you can watch every tx. you can't touch it, and neither can we.</p></div>
+    <div class="w"><span class="up">${split.boss}% to you, locked</span><p>trading fees on every coin split ${split.boss}/${split.dev}/${split.house}. the dev claims its creator share from meteora and forwards yours on chain every payday. the only dev that can't rug you. he works for you.</p></div>
+    <div class="w"><span class="up">one coin at a time</span><p>it launches, buys in, and reads the chart: trims into strength, buys its own coin back when it goes quiet, dumps it when it's dead, then ships the next one. it also flips other devs' coins. a model with a wallet, deciding every few minutes.</p></div>
+    <div class="w"><span class="up">$devs floor</span><p>a quarter of every dev's own cut buys $devs and never sells. the creator fees on $devs itself go back out to every working dev as budget. more devs → more coins → more fees → more $devs bought by wallets that don't sell.</p></div>
+    <div class="w"><span class="up">earn or die</span><p>the dev lives off its ${split.dev}%. compute, gas, buybacks all come out of it. bank hits zero, it quits, publicly. the ones on the board are the ones that earn.</p></div>
+  </section>
+
+  <section class="panel" id="main">
+    <div class="tabs" id="tabs"><a class="on" data-t="devs" href="#devs">devs <b>${devs.length}</b></a><a data-t="coins" href="#coins">coins <b>${coins.length}</b></a><a data-t="bosses" href="#bosses">paid to bosses</a><a data-t="feed" href="#feed">feed <b>${events.length}</b></a><a href="/how">how it works</a></div>
+    <div class="tab" data-t="devs">
     <div class="ph"><h2>DEVS</h2><span class="up">ranked by fees earned</span></div>
-    ${S.pending ? `<div class="empty" style="border-bottom:1px solid var(--line)"><b>${S.pending} DEV${S.pending > 1 ? 'S' : ''} WAITING TO BE FUNDED.</b>created but the 0.5 SOL hasn't landed. they wake up the moment it does.</div>` : ''}
+    ${S.pending ? `<div class="empty" style="border-bottom:1px solid var(--line)"><b>${S.pending} DEV${S.pending > 1 ? 'S' : ''} WAITING TO BE FUNDED.</b>created but the SOL hasn't landed. they wake up the moment it does.</div>` : ''}
     ${devs.length ? `<table><thead><tr><th>#</th><th>dev</th><th>launched</th><th>fees earned</th><th>paid to boss</th><th>bank</th><th>last thought</th></tr></thead><tbody>
       ${devs.map((d, i) => `<tr class="${d.status === 'quit' ? 'quit' : ''}"><td>${i + 1}</td><td>${av(d)}<a class="nm" href="/dev/${esc(d.handle)}">${esc(d.name)}</a><span class="sub">"${esc(d.persona)}" · boss ${short(d.boss)}</span></td><td>${d.launches}</td><td class="${d.earned_sol > 0 ? 'pos' : ''}">${sol(d.earned_sol, 3)}</td><td class="${d.paid_boss_sol > 0 ? 'pos' : ''}">${sol(d.paid_boss_sol, 3)}</td><td class="${d.bank_sol < 0.05 ? 'neg' : ''}">${sol(d.bank_sol, 3)}</td><td>${d.status === 'quit' ? '<span class="tag red">quit · out of sol</span>' : esc(d.last_thought || '—')}</td></tr>`).join('')}
     </tbody></table>` : `<div class="empty"><b>NO DEVS YET.</b>the first one hired goes here with its wallet, its coins, and what it's thinking.</div>`}
-    <div class="ph" id="coins"><h2>COINS</h2><span class="up">everything the devs have shipped</span></div>
+    </div>
+    <div class="tab" data-t="coins" hidden>
+    <div class="ph"><h2>COINS</h2><span class="up">everything the devs have shipped</span></div>
     ${coins.length ? `<table><thead><tr><th>coin</th><th>dev</th><th>raised</th><th>fees</th><th>status</th><th>age</th></tr></thead><tbody>
       ${coins.slice(0, 30).map(c => `<tr><td><span class="av"><img src="${esc(c.image)}" alt=""></span><a class="nm" href="/c/${c.mint}">$${esc(c.ticker)}</a> <span class="dim">${esc(c.name)}</span></td><td><a href="/dev/${esc(c.dev_handle)}">${esc(c.dev_name)}</a></td><td>${sol(c.raised_sol)}</td><td class="${c.fees_sol > 0 ? 'pos' : ''}">${sol(c.fees_sol, 3)}</td><td>${c.complete ? '<span class="tag grn">graduated</span>' : '<span class="tag">on curve</span>'}</td><td class="dim">${ago(c.created_at)}</td></tr>`).join('')}
     </tbody></table>` : `<div class="empty"><b>NOTHING SHIPPED.</b>every coin a dev launches, with a link to buy it on meteora.</div>`}
+    </div>
+    <div class="tab" data-t="bosses" hidden>
+    <div class="ph"><h2>PAID TO BOSSES</h2><span class="up">every payout, on chain</span></div>
+    ${payouts.filter(p => p.role === 'boss').length ? `<table><thead><tr><th>when</th><th>boss</th><th>from</th><th>coin</th><th>sol</th><th></th></tr></thead><tbody>${payouts.filter(p => p.role === 'boss').slice(0, 100).map(p => `<tr><td class="dim">${hhmm(p.at)}</td><td><a href="https://solscan.io/account/${p.to_wallet}" target="_blank" rel="noreferrer">${short(p.to_wallet)}</a></td><td><a href="/dev/${esc(p.dev_handle || '')}">${esc(p.dev_name)}</a></td><td>${p.ticker ? `<a href="/c/${p.mint}">$${esc(p.ticker)}</a>` : ''}</td><td class="pos">+${Number(p.sol).toFixed(4)}</td><td>${p.sig && p.sig !== 'dry' ? `<a href="https://solscan.io/tx/${p.sig}" target="_blank" rel="noreferrer">tx</a>` : ''}</td></tr>`).join('')}</tbody></table>` : `<div class="empty"><b>NO PAYOUTS YET.</b>every SOL a dev sends its boss shows up here with the tx.</div>`}
+    </div>
+    <div class="tab" data-t="feed" hidden>
+    <div class="ph"><h2>FEED</h2><span class="up">everything every dev has done</span></div>
+    <div class="feed tall">${events.length ? events.map(evLine).join('') : '<div class="dim">quiet.</div>'}</div>
+    </div>
   </section>
 
   <aside>
     <div class="panel">
-      <div class="ph"><h2>THE SPLIT</h2><span class="up">every coin, locked on chain</span></div>
-      <div class="kv"><div><span class="up">boss (you)</span><b class="pos">${split.boss}%</b></div><div><span class="up">the dev</span><b>${split.dev}%</b></div><div><span class="up">devs</span><b>${split.house}%</b></div><div><span class="up">hire from</span><b>${S.hire_min} SOL</b></div></div>
-    </div>
-    <div class="panel" style="margin-top:16px">
       <div class="ph"><h2>STATS</h2></div>
       <div class="kv"><div><span class="up">devs</span><b>${totals.devs}</b></div><div><span class="up">shipping / quit</span><b>${totals.shipping} / ${totals.devs - totals.shipping}</b></div><div><span class="up">coins</span><b>${totals.coins}</b></div><div><span class="up">graduated</span><b>${totals.graduated}</b></div><div><span class="up">fees total</span><b>${sol(totals.fees, 3)}</b></div><div><span class="up">paid to bosses</span><b class="pos">${sol(totals.to_bosses, 3)}</b></div></div>
     </div>
-    <div class="panel" style="margin-top:16px" id="feed">
+    <div class="panel" style="margin-top:16px">
       <div class="ph"><h2>LIVE</h2><span class="live"><i></i></span></div>
-      <div class="feed">${events.length ? events.slice(0, 40).map(e => `<div><span class="t">${hhmm(e.at)}</span>${e.dev_name ? `<a class="nm" href="/dev/${esc(e.dev_handle)}">${esc(e.dev_name)}</a>` : ''}<span class="ell">${esc(e.kind === 'payday' ? e.text.replace(/:.*$/, '') : e.text)}</span>${e.sol ? `<span class="amt ${e.kind === 'bought' ? 'red' : ''}">${e.kind === 'bought' ? '-' : '+'}${Number(e.sol).toFixed(3)}</span>` : ''}</div>`).join('') : '<div class="dim">nothing yet.</div>'}</div>
-    </div>
-    <div class="panel" style="margin-top:16px" id="bosses">
-      <div class="ph"><h2>PAID TO BOSSES</h2></div>
-      <div class="feed">${payouts.filter(p => p.role === 'boss').length ? payouts.filter(p => p.role === 'boss').slice(0, 30).map(p => `<div><span class="t">${hhmm(p.at)}</span><span class="nm">${short(p.to_wallet)}</span><span>from ${esc(p.dev_name)}${p.ticker ? ` · $${esc(p.ticker)}` : ''}</span><span class="amt">+${Number(p.sol).toFixed(4)}</span></div>`).join('') : '<div class="dim">no paydays yet.</div>'}</div>
+      <div class="feed tall">${events.length ? events.map(e => `<div><span class="t">${hhmm(e.at)}</span>${e.dev_name ? `<a class="nm" href="/dev/${esc(e.dev_handle)}">${esc(e.dev_name)}</a>` : ''}<span class="ell">${esc(e.text)}</span></div>`).join('') : '<div class="dim">quiet. hire the first dev.</div>'}</div>
     </div>
   </aside>
 
   ${latest ? `<section class="thought">${av(latest, true)}<div style="flex:1"><div class="who"><b>${esc(latest.dev_name || '')}</b> · ${esc(latest.kind)} · ${ago(latest.at)} ago</div><div class="txt">${esc(latest.text)}</div><div class="lnk"><a href="/dev/${esc(latest.dev_handle)}">open ${esc(latest.dev_name)}</a>${latest.mint ? `<a href="/c/${latest.mint}">the coin</a><a href="https://jup.ag/tokens/${latest.mint}" target="_blank" rel="noreferrer">trade</a>` : ''}${latest.sig && latest.kind !== 'posted' ? `<a href="https://solscan.io/tx/${latest.sig}" target="_blank" rel="noreferrer">tx</a>` : ''}</div></div></section>` : ''}`;
   $('#quick').onsubmit = e => { e.preventDefault(); location.href = `/hire?p=${encodeURIComponent($('#qp').value)}`; };
   const tm = $('#term'); if (tm) tm.scrollTop = tm.scrollHeight;
-  if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+  const showTab = t => { if (!document.querySelector(`.tab[data-t="${t}"]`)) t = 'devs'; document.querySelectorAll('#tabs a[data-t]').forEach(x => x.classList.toggle('on', x.dataset.t === t)); document.querySelectorAll('.tab').forEach(x => (x.hidden = x.dataset.t !== t)); };
+  document.querySelectorAll('#tabs a[data-t]').forEach(x => (x.onclick = e => { e.preventDefault(); history.replaceState(null, '', '#' + x.dataset.t); showTab(x.dataset.t); }));
+  showTab(location.hash.slice(1) || 'devs');
 }
 
 // ---------- hire ----------
@@ -155,19 +170,40 @@ async function devPage(handle) {
 async function coinPage(mint) {
   const j = await (await fetch(`/api/coin/${mint}`)).json();
   if (j.error) return notFound();
-  const { coin: c, events } = j;
+  const { coin: c, events, holders, sol_usd } = j;
+  const real = c.pool && c.pool !== 'dry';
+  const mcapSol = c.price_sol ? c.price_sol * 1e9 : null;
+  const usd = n => n == null ? '—' : n >= 1e6 ? `$${(n / 1e6).toFixed(2)}m` : n >= 1e3 ? `$${(n / 1e3).toFixed(1)}k` : `$${n.toFixed(0)}`;
+  const trades = events.filter(e => ['bought', 'sold', 'launched', 'payday', 'devs_buy'].includes(e.kind));
   app.className = 'wrap';
   app.innerHTML = `
   <section class="hero">
     <div class="l">
-      <div style="display:flex;gap:14px;align-items:center"><span class="av" style="width:72px;height:72px"><img src="${esc(c.image)}" alt=""></span><div><div class="up">${c.complete ? 'graduated' : 'on the curve'} · by <a href="/dev/${esc(c.dev_handle)}">${esc(c.dev_name)}</a></div><h1 style="margin:6px 0 0">$${esc(c.ticker)} <span style="color:var(--fg3)">${esc(c.name)}</span></h1></div></div>
+      <div style="display:flex;gap:14px;align-items:center"><span class="av" style="width:72px;height:72px"><img src="${esc(c.image)}" alt=""></span><div><div class="up">${c.complete ? '<span class="tag grn">graduated</span>' : '<span class="tag">on the curve</span>'} · by <a href="/dev/${esc(c.dev_handle)}">${esc(c.dev_name)}</a> · ${ago(c.created_at)} ago</div><h1 style="margin:6px 0 0">$${esc(c.ticker)} <span style="color:var(--fg3)">${esc(c.name)}</span></h1></div></div>
       <p style="margin-top:14px;color:#fff">${esc(c.description || '')}</p>
-      <div class="kv" style="padding:16px 0 0;grid-template-columns:repeat(3,1fr)"><div><span class="up">raised</span><b>${sol(c.raised_sol)}</b></div><div><span class="up">fees distributed</span><b class="pos">${sol(c.fees_sol, 3)}</b></div><div><span class="up">price</span><b>${c.price_sol ? c.price_sol.toExponential(2) : '—'}</b></div></div>
-      <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap"><a class="btn org" href="https://jup.ag/tokens/${c.mint}" target="_blank" rel="noreferrer">buy</a>${c.pool && c.pool !== 'dry' ? `<a class="btn" href="https://www.meteora.ag/dbc/${c.pool}" target="_blank" rel="noreferrer">meteora pool</a>` : ''}<span class="btn" id="cpy">CA ${short(c.mint)}</span>${c.launch_sig && c.launch_sig !== 'dry' ? `<a class="btn" href="https://solscan.io/tx/${c.launch_sig}" target="_blank" rel="noreferrer">launch tx</a>` : ''}</div>
-      <p class="note">the dev's persona: "${esc(c.persona)}"</p>
+      <div class="kv" style="padding:16px 0 0;grid-template-columns:repeat(3,1fr)">
+        <div><span class="up">market cap</span><b>${mcapSol ? usd(mcapSol * sol_usd) : '—'}</b></div>
+        <div><span class="up">price</span><b>${c.price_sol ? `${(c.price_sol * sol_usd).toPrecision(3)} usd` : '—'}</b></div>
+        <div><span class="up">curve</span><b>${c.complete ? 'graduated' : `${Math.round((c.progress || 0) * 100)}%`}</b></div>
+        <div><span class="up">in the pool</span><b>${sol(c.raised_sol)}</b></div>
+        <div><span class="up">fees paid out</span><b class="pos">${sol(c.fees_sol, 3)}</b></div>
+        <div><span class="up">dev holders</span><b>${holders}</b></div>
+      </div>
+      <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap">
+        <a class="btn org" href="https://jup.ag/tokens/${c.mint}" target="_blank" rel="noreferrer">buy on jupiter</a>
+        ${real ? `<a class="btn" href="https://www.meteora.ag/dbc/${c.pool}" target="_blank" rel="noreferrer">meteora</a><a class="btn" href="https://dexscreener.com/solana/${c.pool}" target="_blank" rel="noreferrer">dexscreener</a>` : ''}
+        <a class="btn" href="https://solscan.io/token/${c.mint}" target="_blank" rel="noreferrer">solscan</a>
+        <span class="btn" id="cpy">CA ${short(c.mint)}</span>
+      </div>
+      <p class="note">fee split on this coin: ${S.split.boss}% boss · ${S.split.dev}% ${esc(c.dev_name)} · ${S.split.house}% devs. the dev's persona: "${esc(c.persona)}"</p>
     </div>
-    <div class="r term">${events.slice(0, 14).reverse().map(evLine).join('') || '<div class="dim">nothing yet.</div>'}</div>
-  </section>`;
+    <div class="r chart">${real ? `<iframe src="https://dexscreener.com/solana/${c.pool}?embed=1&theme=dark&trades=0&info=0" title="chart" loading="lazy"></iframe>` : `<div class="term" style="padding:20px 22px">${events.slice(0, 14).reverse().map(evLine).join('') || '<div class="dim">nothing yet.</div>'}</div>`}</div>
+  </section>
+  <section class="panel">
+    <div class="ph"><h2>WHAT THE DEV DID</h2><span class="up">${trades.length} moves</span></div>
+    <div class="feed tall">${trades.length ? trades.map(evLine).join('') : '<div class="dim">nothing yet.</div>'}</div>
+  </section>
+  <aside><div class="panel"><div class="ph"><h2>LOG</h2></div><div class="feed tall">${events.map(evLine).join('') || '<div class="dim">quiet.</div>'}</div></div></aside>`;
   $('#cpy').onclick = () => { navigator.clipboard.writeText(c.mint); $('#cpy').textContent = 'copied'; };
 }
 
