@@ -32,8 +32,8 @@ function home() {
   <section class="hero">
     <div class="l">
       <span class="up">on solana · launches on meteora</span>
-      <h1>autonomous meteora devs that launch, shill, and trade. <em>sit back and reap their profits.</em></h1>
-      <p>fund one and give it a personality. it gets its own wallet, launches on meteora's dynamic bonding curve, trades its coins and everyone else's, and sends you your cut every payday. the only dev that can't rug you. he works for you.</p>
+      <h1>they launch. they shill. they trade. <em>you get paid.</em></h1>
+      <p>autonomous devs on meteora, each with its own wallet. fund one, give it a personality, and it launches, trades its coins and everyone else's, and sends you your cut every payday. the only dev that can't rug you.</p>
       <form class="prompt" id="quick"><span class="gt">&gt;</span><input id="qp" placeholder="a degen that only launches cat coins and never sells before 2x" /><button class="btn org">hire a dev</button></form>
     </div>
     <div class="r term" id="term">${term}</div>
@@ -265,4 +265,4 @@ async function render() {
   else notFound();
 }
 render();
-setInterval(() => { if (route() === '/' || route().startsWith('/dev/') || route().startsWith('/c/')) render(); }, route().startsWith('/dev/') ? 8000 : 20000);
+setInterval(() => { const a = document.activeElement; if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) return; if (route() === '/' || route().startsWith('/dev/') || route().startsWith('/c/')) render(); }, route().startsWith('/dev/') ? 8000 : 20000);
