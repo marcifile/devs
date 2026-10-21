@@ -194,12 +194,16 @@ async function devPage(handle) {
 function progress(d, events) {
   const has = k => events.some(e => e.kind === k);
   const txt = k => (events.find(e => e.kind === k) || {}).text || '';
-  const steps = [['funded', d.status !== 'pending'], ['named itself', has('hired')], ['thinking', has('thought') || has('work')], ['icon', /icon/.test(txt('work')) || /pinning|launch tx/.test(txt('work'))], ['metadata', /pinning|launch tx/.test(txt('work'))], ['launch tx', /launch tx/.test(txt('work'))], ['live', has('launched')]];
+  const steps = [['funded', d.status !== 'pending'], ['named', has('hired')], ['deciding', has('thought') || has('work')], ['icon', /icon|pinning|launch tx/.test(txt('work'))], ['metadata', /pinning|launch tx/.test(txt('work'))], ['launch tx', /launch tx/.test(txt('work'))], ['live', has('launched')]];
   const done = steps.filter(s => s[1]).length;
-  const last = events[0]; const busy = last && (last.kind === 'work' || last.kind === 'thought') && Date.now() - last.at < 3 * 60000;
-  const eta = d.next_action_at ? Math.max(0, Math.round((d.next_action_at - Date.now()) / 60000)) : null;
-  const label = d.status === 'pending' ? 'waiting for the SOL to land' : d.status === 'quit' ? 'quit before shipping' : busy ? last.text : done < 3 ? 'waking up' : eta != null && eta > 0 ? `next decision in ${eta}m` : 'deciding now';
-  return `<div class="prog"><div class="bar ${busy ? 'busy' : ''}"><i style="width:${Math.max(6, (done / steps.length) * 100)}%"></i></div><div class="steps">${steps.map(([t, ok], i) => `<span class="${ok ? 'ok' : i === done ? 'now' : ''}">${t}</span>`).join('')}</div><div class="note">${label}<span class="cur"></span> · a launch takes about a minute end to end: the model picks the coin, the icon is generated, metadata is pinned, the tx is sent.</div></div>`;
+  const last = events[0];
+  const since = last ? (Date.now() - last.at) / 1000 : (Date.now() - d.created_at) / 1000;
+  const partial = done < steps.length ? Math.min(0.92, since / 40) : 0; // creep toward the next step over ~40s
+  const pct = Math.min(100, ((done + partial) / steps.length) * 100);
+  const busy = d.status === 'shipping' && done < steps.length;
+  const label = d.status === 'pending' ? 'waiting for the SOL to land' : d.status === 'quit' ? 'quit before shipping' : last && last.kind === 'work' ? last.text : steps[Math.min(done, steps.length - 1)][0];
+  const con = events.slice(0, 8).reverse().map(e => `<div><span class="t">${hhmm(e.at)}</span><span class="${e.kind === 'error' ? 'red' : e.kind === 'thought' ? 'org' : e.kind === 'work' ? 'dim' : ''}">${esc(e.text)}</span></div>`).join('');
+  return `<div class="prog"><div class="bar ${busy ? 'busy' : ''}"><i style="width:${Math.max(4, pct)}%"></i></div><div class="steps">${steps.map(([t, ok], i) => `<span class="${ok ? 'ok' : i === done ? 'now' : ''}">${t}</span>`).join('')}</div><div class="con">${con}<div><span class="t">${hhmm(Date.now())}</span><span class="org">${esc(label)}</span><span class="cur"></span></div></div></div>`;
 }
 
 // ---------- coin page ----------
