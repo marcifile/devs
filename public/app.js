@@ -17,7 +17,7 @@ function paintTop() {
 }
 
 const evLine = e => {
-  const cls = e.kind === 'error' ? 'red' : ['launched', 'payday', 'hired'].includes(e.kind) ? 'ok' : e.kind === 'thought' ? 'org' : '';
+  const cls = e.kind === 'error' ? 'red' : ['launched', 'payday', 'hired'].includes(e.kind) ? 'ok' : e.kind === 'thought' ? 'org' : e.kind === 'work' ? 'dim' : '';
   return `<div><span class="t">${hhmm(e.at)}</span>${e.dev_name ? `<a class="nm" href="/dev/${esc(e.dev_handle || e.dev_name)}">${esc(e.dev_name)}</a> ` : ''}<span class="${cls}">${esc(e.text)}</span>${e.mint && e.kind === 'launched' ? ` <a href="/c/${e.mint}">→</a>` : ''}</div>`;
 };
 
@@ -193,11 +193,13 @@ async function devPage(handle) {
 // Before the first coin: a progress bar through wake → name → think → launch.
 function progress(d, events) {
   const has = k => events.some(e => e.kind === k);
-  const steps = [['funded', d.status !== 'pending'], ['named itself', has('hired')], ['thinking', has('thought')], ['launching', has('launched')]];
+  const txt = k => (events.find(e => e.kind === k) || {}).text || '';
+  const steps = [['funded', d.status !== 'pending'], ['named itself', has('hired')], ['thinking', has('thought') || has('work')], ['icon', /icon/.test(txt('work')) || /pinning|launch tx/.test(txt('work'))], ['metadata', /pinning|launch tx/.test(txt('work'))], ['launch tx', /launch tx/.test(txt('work'))], ['live', has('launched')]];
   const done = steps.filter(s => s[1]).length;
+  const last = events[0]; const busy = last && (last.kind === 'work' || last.kind === 'thought') && Date.now() - last.at < 3 * 60000;
   const eta = d.next_action_at ? Math.max(0, Math.round((d.next_action_at - Date.now()) / 60000)) : null;
-  const label = d.status === 'pending' ? 'waiting for the SOL to land' : d.status === 'quit' ? 'quit before shipping' : done < 3 ? 'waking up' : eta != null && eta > 0 ? `next decision in ${eta}m` : 'deciding now';
-  return `<div class="prog"><div class="bar"><i style="width:${Math.max(8, (done / steps.length) * 100)}%"></i></div><div class="steps">${steps.map(([t, ok], i) => `<span class="${ok ? 'ok' : i === done ? 'now' : ''}">${t}</span>`).join('')}</div><div class="note">${label}<span class="cur"></span> · the first coin usually ships within a few minutes of waking. generating the icon and sending the launch tx takes about a minute.</div></div>`;
+  const label = d.status === 'pending' ? 'waiting for the SOL to land' : d.status === 'quit' ? 'quit before shipping' : busy ? last.text : done < 3 ? 'waking up' : eta != null && eta > 0 ? `next decision in ${eta}m` : 'deciding now';
+  return `<div class="prog"><div class="bar ${busy ? 'busy' : ''}"><i style="width:${Math.max(6, (done / steps.length) * 100)}%"></i></div><div class="steps">${steps.map(([t, ok], i) => `<span class="${ok ? 'ok' : i === done ? 'now' : ''}">${t}</span>`).join('')}</div><div class="note">${label}<span class="cur"></span> · a launch takes about a minute end to end: the model picks the coin, the icon is generated, metadata is pinned, the tx is sent.</div></div>`;
 }
 
 // ---------- coin page ----------

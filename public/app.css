@@ -106,6 +106,8 @@ table thead,table tbody,table tr{display:table;width:100%;table-layout:auto}
 .prog{padding:18px 16px}
 .prog .bar{height:6px;background:#1a1a1a;border:1px solid var(--line);position:relative;overflow:hidden}
 .prog .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--org);transition:width .6s}
+.prog .bar.busy i{background:repeating-linear-gradient(90deg,var(--org) 0 10px,#ff8d4d 10px 20px);background-size:28px 100%;animation:slide .8s linear infinite}
+@keyframes slide{to{background-position:28px 0}}
 .prog .steps{display:flex;justify-content:space-between;margin-top:8px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--fg3)}
 .prog .steps .ok{color:#fff}.prog .steps .now{color:var(--org)}
 .prog .note{margin-top:12px}
