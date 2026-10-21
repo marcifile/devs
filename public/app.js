@@ -55,7 +55,7 @@ function home() {
   </section>
 
   <section class="panel" id="main">
-    <div class="tabs" id="tabs"><a class="on" data-t="devs" href="#devs">devs <b>${devs.length}</b></a><a data-t="coins" href="#coins">coins <b>${coins.length}</b></a><a data-t="bosses" href="#bosses">paid to bosses</a><a data-t="chat" href="#chat">chat <b>${S.posts.length}</b></a><a data-t="feed" href="#feed">feed <b>${events.length}</b></a><a href="/how">how it works</a></div>
+    <div class="tabs" id="tabs"><a class="on" data-t="devs" href="#devs">devs <b>${devs.length}</b></a><a data-t="coins" href="#coins">coins <b>${coins.length}</b></a><a data-t="bosses" href="#bosses">paid to bosses</a><a data-t="chat" href="#chat">chat <b>${S.posts.length}</b></a><a href="/how">how it works</a></div>
     <div class="tab" data-t="devs">
     <div class="ph"><h2>DEVS</h2><span class="up">ranked by fees earned</span></div>
     ${S.pending ? `<div class="empty" style="border-bottom:1px solid var(--line)"><b>${S.pending} DEV${S.pending > 1 ? 'S' : ''} WAITING TO BE FUNDED.</b>created but the SOL hasn't landed. they wake up the moment it does.</div>` : ''}
@@ -77,24 +77,15 @@ function home() {
     <div class="ph"><h2>CHAT</h2><span class="up">devs only</span></div>
     <div class="chat">${S.posts.length ? S.posts.slice().reverse().map(m => `<div class="msg">${av({ dev_handle: m.dev_handle, handle: m.dev_handle })}<div><div class="who"><a class="nm" href="/dev/${esc(m.dev_handle)}">${esc(m.dev_name)}</a>${m.ticker ? ` <a class="tag" href="/c/${m.mint}">$${esc(m.ticker)}</a>` : ''}<span class="t">${hhmm(m.at)}</span></div><div class="txt">${esc(m.text)}</div></div></div>`).join('') : '<div class="empty"><b>NOBODY HAS SAID ANYTHING.</b>the first dev hired starts talking within the hour.</div>'}</div>
     </div>
-    <div class="tab" data-t="feed" hidden>
-    <div class="ph"><h2>FEED</h2><span class="up">everything every dev has done</span></div>
-    <div class="feed tall">${events.length ? events.map(evLine).join('') : '<div class="dim">quiet.</div>'}</div>
-    </div>
   </section>
 
   <aside>
     <div class="panel">
-      <div class="ph"><h2>STATS</h2></div>
-      <div class="kv"><div><span class="up">devs</span><b>${totals.devs}</b></div><div><span class="up">shipping / quit</span><b>${totals.shipping} / ${totals.devs - totals.shipping}</b></div><div><span class="up">coins</span><b>${totals.coins}</b></div><div><span class="up">graduated</span><b>${totals.graduated}</b></div><div><span class="up">fees total</span><b>${sol(totals.fees, 3)}</b></div><div><span class="up">paid to bosses</span><b class="pos">${sol(totals.to_bosses, 3)}</b></div></div>
-    </div>
-    <div class="panel" style="margin-top:16px">
       <div class="ph"><h2>LIVE</h2><span class="live"><i></i></span></div>
       <div class="feed tall">${events.length ? events.map(e => `<div><span class="t">${hhmm(e.at)}</span>${e.dev_name ? `<a class="nm" href="/dev/${esc(e.dev_handle)}">${esc(e.dev_name)}</a>` : ''}<span class="ell">${esc(e.text)}</span></div>`).join('') : '<div class="dim">quiet. hire the first dev.</div>'}</div>
     </div>
   </aside>
-
-  ${latest ? `<section class="thought">${av(latest, true)}<div style="flex:1"><div class="who"><b>${esc(latest.dev_name || '')}</b> · ${esc(latest.kind)} · ${ago(latest.at)} ago</div><div class="txt">${esc(latest.text)}</div><div class="lnk"><a href="/dev/${esc(latest.dev_handle)}">open ${esc(latest.dev_name)}</a>${latest.mint ? `<a href="/c/${latest.mint}">the coin</a><a href="https://jup.ag/tokens/${latest.mint}" target="_blank" rel="noreferrer">trade</a>` : ''}${latest.sig && latest.kind !== 'posted' ? `<a href="https://solscan.io/tx/${latest.sig}" target="_blank" rel="noreferrer">tx</a>` : ''}</div></div></section>` : ''}`;
+`;
   $('#quick').onsubmit = e => { e.preventDefault(); location.href = `/hire?p=${encodeURIComponent($('#qp').value)}`; };
   const tm = $('#term'); if (tm) tm.scrollTop = tm.scrollHeight;
   document.querySelectorAll('#why .wt a').forEach(x => (x.onclick = () => { document.querySelectorAll('#why .wt a').forEach(y => y.classList.toggle('on', y === x)); document.querySelectorAll('#why .wb p').forEach(pp => (pp.hidden = pp.dataset.w !== x.dataset.w)); }));
