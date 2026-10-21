@@ -12,7 +12,7 @@ const app = express();
 app.use(express.json({ limit: '200kb' }));
 app.use(express.static(path.join(ROOT, 'public'), { extensions: ['html'] }));
 
-const pub = d => d && ({ id: d.id, handle: d.handle, name: d.name, persona: d.persona, boss: d.boss, wallet: d.wallet, x_handle: d.x_handle, status: d.status, bank_sol: d.bank_sol, spent_sol: d.spent_sol, earned_sol: d.earned_sol, paid_boss_sol: d.paid_boss_sol, launches: d.launches, last_thought: d.last_thought, next_action_at: d.next_action_at, created_at: d.created_at });
+const pub = d => d && ({ id: d.id, handle: d.handle, name: d.name, persona: d.persona, boss: d.boss, wallet: d.wallet, x_handle: d.x_handle, status: d.status, bank_sol: d.bank_sol, hire_sol: d.hire_sol, devs_tokens: d.devs_tokens, devs_sol: d.devs_sol, spent_sol: d.spent_sol, earned_sol: d.earned_sol, paid_boss_sol: d.paid_boss_sol, launches: d.launches, last_thought: d.last_thought, next_action_at: d.next_action_at, created_at: d.created_at });
 
 // ---- read ----
 app.get('/api/state', (req, res) => {
@@ -28,7 +28,7 @@ app.get('/api/state', (req, res) => {
       (select coalesce(sum(sol),0) from payouts where role='boss') to_bosses,
       (select coalesce(sum(sol),0) from payouts where role='house') to_house,
       (select coalesce(sum(fees_sol),0) from coins) fees`).get();
-  res.json({ devs, coins, events, payouts, totals: t, pending: db.prepare("select count(*) c from devs where status='pending'").get().c, split: { boss: D.BOSS_BPS / 100, dev: D.DEV_BPS / 100, house: D.HOUSE_BPS / 100 }, hire_sol: D.HIRE_SOL, x: xReady(), site: process.env.SITE_URL, project_x: process.env.X_PROJECT_URL || null, ca: process.env.PLATFORM_MINT || null });
+  res.json({ devs, coins, events, payouts, totals: t, pending: db.prepare("select count(*) c from devs where status='pending'").get().c, split: { boss: D.BOSS_BPS / 100, dev: D.DEV_BPS / 100, house: D.HOUSE_BPS / 100 }, hire_sol: D.HIRE_SOL, hire_min: D.HIRE_MIN, devs_slice: D.DEVS_SLICE, x: xReady(), site: process.env.SITE_URL, project_x: process.env.X_PROJECT_URL || null, ca: process.env.PLATFORM_MINT || null });
 });
 app.get('/api/dev/:handle', (req, res) => {
   const d = db.prepare('select * from devs where handle=? or name=?').get(req.params.handle, req.params.handle);
@@ -54,7 +54,9 @@ app.post('/api/hire', (req, res) => {
   const boss = String(req.body.boss || '').trim();
   if (persona.length < 8) return res.status(400).json({ error: 'give your dev a personality (at least a few words)' });
   if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(boss)) return res.status(400).json({ error: 'paste a valid Solana wallet. that is where your cut goes.' });
-  const h = D.pendingHire(boss, persona);
+  const sol = Number(req.body.sol);
+  if (!(sol >= D.HIRE_MIN) || sol > 100) return res.status(400).json({ error: `fund it with at least ${D.HIRE_MIN} SOL` });
+  const h = D.pendingHire(boss, persona, sol);
   res.json({ ...h, note: `send exactly ${h.amount} SOL to ${h.wallet}. the dev wakes up when it lands.` });
 });
 app.get('/api/hire/:handle', async (req, res) => {

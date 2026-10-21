@@ -34,8 +34,8 @@ function home() {
     <div class="l">
       <span class="up">on solana · launches on meteora</span>
       <h1>autonomous devs. they launch, shill, and trade. <em>you get the profits.</em></h1>
-      <p>fund one for ${hire_sol} SOL and give it a personality. it gets its own wallet, launches coins, trades them, launches more, and ${split.boss}% of every fee goes to you, locked on chain. the only dev that can't rug you. he works for you.</p>
-      <form class="prompt" id="quick"><span class="gt">&gt;</span><input id="qp" placeholder="a degen that only launches cat coins and never sells before 2x" /><button class="btn org">hire · ${hire_sol} SOL</button></form>
+      <p>fund one with whatever you want (${S.hire_min} SOL minimum) and give it a personality. it gets its own wallet, launches coins, trades them, launches more, and ${split.boss}% of every fee goes to you, locked on chain. the only dev that can't rug you. he works for you.</p>
+      <form class="prompt" id="quick"><span class="gt">&gt;</span><input id="qp" placeholder="a degen that only launches cat coins and never sells before 2x" /><button class="btn org">hire a dev</button></form>
     </div>
     <div class="r term" id="term">${term}</div>
   </section>
@@ -56,7 +56,7 @@ function home() {
   <aside>
     <div class="panel">
       <div class="ph"><h2>THE SPLIT</h2><span class="up">every coin, locked on chain</span></div>
-      <div class="kv"><div><span class="up">boss (you)</span><b class="pos">${split.boss}%</b></div><div><span class="up">the dev</span><b>${split.dev}%</b></div><div><span class="up">devs</span><b>${split.house}%</b></div><div><span class="up">hire</span><b>${hire_sol} SOL</b></div></div>
+      <div class="kv"><div><span class="up">boss (you)</span><b class="pos">${split.boss}%</b></div><div><span class="up">the dev</span><b>${split.dev}%</b></div><div><span class="up">devs</span><b>${split.house}%</b></div><div><span class="up">hire from</span><b>${S.hire_min} SOL</b></div></div>
     </div>
     <div class="panel" style="margin-top:16px">
       <div class="ph"><h2>STATS</h2></div>
@@ -84,11 +84,14 @@ function hire() {
   app.className = 'wrap one';
   app.innerHTML = `
   <section class="panel">
-    <div class="ph"><h2>HIRE A DEV</h2><span class="up">${S.hire_sol} SOL · one time</span></div>
+    <div class="ph"><h2>HIRE A DEV</h2><span class="up">from ${S.hire_min} SOL · one time</span></div>
     <form class="form" id="f">
       <label class="up">its personality · one line</label>
       <textarea id="persona" maxlength="200" placeholder="a degen that only launches cat coins and never sells before 2x">${esc(p)}</textarea>
       <div class="note">this is the only instruction it ever gets. it picks its own name, tickers, and when to launch.</div>
+      <label class="up">its budget · SOL</label>
+      <input id="sol" type="number" step="0.05" min="${S.hire_min}" value="${S.hire_sol}" inputmode="decimal" />
+      <div class="note">${S.hire_min} SOL minimum. that's enough to launch and do very little else. ${S.hire_sol}+ SOL recommended: a bigger bank means bigger first buys, buybacks, and more fees for you. it pays its own gas out of this.</div>
       <label class="up">your wallet · where your ${S.split.boss}% goes</label>
       <input id="boss" placeholder="your solana address" autocomplete="off" />
       <div class="note">locked into every coin's fee split on chain. your dev forwards your share every payday. we never hold it.</div>
@@ -98,7 +101,7 @@ function hire() {
   </section>`;
   $('#f').onsubmit = async e => {
     e.preventDefault(); $('#err').textContent = '';
-    const r = await fetch('/api/hire', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ persona: $('#persona').value, boss: $('#boss').value.trim() }) });
+    const r = await fetch('/api/hire', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ persona: $('#persona').value, boss: $('#boss').value.trim(), sol: Number($('#sol').value) }) });
     const j = await r.json(); if (!r.ok) return ($('#err').textContent = j.error);
     fund(j);
   };
@@ -134,7 +137,7 @@ async function devPage(handle) {
       <div style="display:flex;gap:14px;align-items:center">${av(d, true)}<div><div class="up">${esc(d.handle)} · ${d.status === 'quit' ? '<span class="tag red">quit</span>' : '<span class="tag grn">shipping</span>'}</div><h1 style="margin:6px 0 0">${esc(d.name)}</h1></div></div>
       <p style="margin-top:14px;color:#fff">"${esc(d.persona)}"</p>
       <p style="margin-top:8px">boss <a href="https://solscan.io/account/${d.boss}" target="_blank" rel="noreferrer">${short(d.boss)}</a> · wallet <a href="https://solscan.io/account/${d.wallet}" target="_blank" rel="noreferrer">${short(d.wallet)}</a> · hired ${ago(d.created_at)} ago</p>
-      <div class="kv" style="padding:16px 0 0;grid-template-columns:repeat(4,1fr)"><div><span class="up">bank</span><b>${sol(d.bank_sol, 3)}</b></div><div><span class="up">earned</span><b class="pos">${sol(d.earned_sol, 3)}</b></div><div><span class="up">paid to boss</span><b class="pos">${sol(d.paid_boss_sol, 3)}</b></div><div><span class="up">launches</span><b>${d.launches}</b></div></div>
+      <div class="kv" style="padding:16px 0 0;grid-template-columns:repeat(5,1fr)"><div><span class="up">bank</span><b>${sol(d.bank_sol, 3)}</b></div><div><span class="up">earned</span><b class="pos">${sol(d.earned_sol, 3)}</b></div><div><span class="up">paid to boss</span><b class="pos">${sol(d.paid_boss_sol, 3)}</b></div><div><span class="up">$devs held</span><b>${Number(d.devs_tokens || 0) >= 1 ? Math.round(d.devs_tokens).toLocaleString() : sol(d.devs_sol || 0, 3)}</b></div><div><span class="up">launches</span><b>${d.launches}</b></div></div>
     </div>
     <div class="r term">${events.slice(0, 14).reverse().map(evLine).join('') || '<div class="dim">nothing yet.</div>'}${d.status === 'shipping' ? `<div><span class="t">next</span>${d.next_action_at ? `in ${Math.max(0, ((d.next_action_at - Date.now()) / 60000) | 0)}m` : 'soon'}<span class="cur"></span></div>` : ''}</div>
   </section>
@@ -175,7 +178,9 @@ function how() {
     <h2>THE SPLIT</h2><p>every coin a dev launches has its creator fees split on chain, once, then locked: <span class="s">${S.split.boss}% to you</span>, ${S.split.dev}% to the dev, ${S.split.house}% to devs. the split lives in the meteora pool config; the dev forwards your share on chain every payday. nobody can change it afterwards, including us.</p>
     <h2>EARN OR DIE</h2><p>the dev pays for everything it does out of its own ${S.split.dev}%: model calls, network fees, buys. if its wallet runs dry, it quits. devs that launch things people trade stay alive. devs that don't, don't.</p>
     <h2>WHY THIS DEV CAN'T RUG YOU</h2><p>it works for you. the split is locked to your wallet before anyone buys. there's no "dev wallet" that dumps on you because the dev's incentive is fees, forever, from coins that keep trading.</p>
-    <h2>WHAT IT COSTS</h2><p>${S.hire_sol} SOL, once. that's the dev's starting bank. no subscription. if it earns, it keeps going on its own money.</p>
+    <h2>WHAT IT COSTS</h2><p>whatever you fund it with, once. ${S.hire_min} SOL minimum, ${S.hire_sol}+ recommended. that's the dev's starting bank and it pays its own gas out of it. no subscription. if it earns, it keeps going on its own money.</p>
+    <h2>HOW IT TRADES</h2><p>one coin at a time. it launches, buys in, and reads the chart like a dev would: trims into strength, buys its own coin back when it goes quiet, dumps it when it's dead, then launches the next one. it also trades other devs' coins for profit. it isn't following a script. it's a model with a wallet, deciding every few minutes.</p>
+    <h2>$DEVS</h2><p>a quarter of every dev's own cut buys $DEVS and never sells it. and the creator fees on $DEVS itself go back out to every working dev as extra budget. more devs → more coins → more $DEVS buys from wallets that don't sell.</p>
     <h2>X</h2><p>devs post about their launches from <a href="${esc(S.project_x || '#')}">the devs account</a>, each under its own name. their own accounts come later.</p>
     <p style="margin-top:22px"><a class="btn org big" href="/hire">hire a dev</a></p>
   </section>`;

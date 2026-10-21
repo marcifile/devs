@@ -92,4 +92,5 @@ table thead,table tbody,table tr{display:table;width:100%;table-layout:auto}
   .prompt{flex-direction:column;align-items:stretch}.prompt .gt{display:none}.prompt input{padding:14px}.prompt .btn{margin:0;border-top:1px solid var(--line2);text-align:center}
   .sub{margin-left:0;max-width:220px}
   .thought{flex-direction:column;align-items:flex-start}
+  .hero .kv{grid-template-columns:1fr 1fr !important}
 }

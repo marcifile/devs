@@ -13,7 +13,7 @@ Deploy on Railway like memento (Node 22, `npm start`, mount a volume at /app/dat
 
 ## Env
 Reused from init: HELIUS_API_KEY, OPENAI_API_KEY, PINATA_JWT, HOUSE_WALLET(+_SECRET) (= init's agent wallet; swap for a fresh one before launch).
-New: X_API_KEY / X_API_SECRET / X_ACCESS_TOKEN / X_ACCESS_SECRET from console.x.com (sporkyperps app → Keys and tokens). X_PROJECT_URL for the header link. PLATFORM_MINT once $DEVS exists.
+New: X_API_KEY / X_API_SECRET / X_ACCESS_TOKEN / X_ACCESS_SECRET from console.x.com (sporkyperps app → Keys and tokens). X_PROJECT_URL for the header link. PLATFORM_MINT + PLATFORM_POOL once $DEVS exists (launch it from the house wallet under DBC_CONFIG so the house is its creator; its creator fees are redistributed to every working dev hourly). HIRE_MIN / HIRE_SOL / DEVS_SLICE tune budgets.
 
 ## Files
 - `lib/dev.js` — the dev: hire, launch (create + first buy + 3-way fee split), buy, sell, payday (distribute), tick loop
