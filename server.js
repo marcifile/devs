@@ -6,6 +6,8 @@ import * as D from './lib/dev.js';
 import * as P from './lib/meteora.js';
 import { avatarSvg } from './lib/avatar.js';
 import { assetsDir } from './lib/store.js';
+import nacl from 'tweetnacl';
+import { PublicKey } from '@solana/web3.js';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -29,7 +31,8 @@ app.get('/api/state', (req, res) => {
       (select coalesce(sum(sol),0) from payouts where role='house') to_house,
       (select coalesce(sum(fees_sol),0) from coins) fees`).get();
   const posts = db.prepare("select e.id, e.text, e.at, e.mint, d.name dev_name, d.handle dev_handle, c.ticker from events e join devs d on d.id=e.dev_id left join coins c on c.mint=e.mint where e.kind='posted' order by e.at desc limit 150").all();
-  res.json({ devs, coins, events, payouts, posts, totals: t, pending: db.prepare("select count(*) c from devs where status='pending'").get().c, split: { boss: D.BOSS_BPS / 100, dev: D.DEV_BPS / 100, house: D.HOUSE_BPS / 100 }, hire_sol: D.HIRE_SOL, hire_min: D.HIRE_MIN, sol_usd: Number(process.env.SOL_USD || 180), devs_slice: D.DEVS_SLICE, site: process.env.SITE_URL, project_x: process.env.X_PROJECT_URL || null, ca: process.env.PLATFORM_MINT || null });
+  const notice = db.prepare('select text from notices where until>? order by id desc limit 1').get(Date.now());
+  res.json({ devs, coins, events, payouts, posts, notice: notice?.text || null, totals: t, pending: db.prepare("select count(*) c from devs where status='pending'").get().c, split: { boss: D.BOSS_BPS / 100, dev: D.DEV_BPS / 100, house: D.HOUSE_BPS / 100 }, hire_sol: D.HIRE_SOL, hire_min: D.HIRE_MIN, sol_usd: Number(process.env.SOL_USD || 180), devs_slice: D.DEVS_SLICE, site: process.env.SITE_URL, project_x: process.env.X_PROJECT_URL || null, ca: process.env.PLATFORM_MINT || null });
 });
 app.get('/api/dev/:handle', (req, res) => {
   const d = db.prepare('select * from devs where handle=? or name=?').get(req.params.handle, req.params.handle);
@@ -67,6 +70,31 @@ app.post('/api/hire', (req, res) => {
 app.get('/api/hire/:handle', async (req, res) => {
   try { const d = await D.confirmHire(req.params.handle); if (!d) return res.status(404).json({ error: 'no such dev' }); res.json({ dev: pub(d), funded: d.status !== 'pending', balance: d.balance ?? null }); }
   catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ---- boss controls (prove you own the boss wallet: sign a message with Phantom) ----
+const bossOk = (req, dev) => {
+  try {
+    const { wallet, sig, msg } = req.body;
+    if (wallet !== dev.boss) return false;
+    if (!/^devs:/.test(msg) || Math.abs(Date.now() - Number(msg.split(':')[1])) > 10 * 60e3) return false;
+    return nacl.sign.detached.verify(new TextEncoder().encode(msg), Buffer.from(sig, 'base64'), new PublicKey(wallet).toBytes());
+  } catch { return false; }
+};
+app.get('/api/mine/:wallet', (req, res) => {
+  res.json({ devs: db.prepare('select * from devs where boss=? order by created_at desc').all(req.params.wallet).map(pub) });
+});
+app.post('/api/dev/:handle/end', async (req, res) => {
+  const d = db.prepare('select * from devs where handle=?').get(req.params.handle); if (!d) return res.status(404).json({ error: 'no such dev' });
+  if (!bossOk(req, d)) return res.status(401).json({ error: 'not your dev' });
+  try { await D.endCoin(d, req.body.mint); res.json({ ok: true }); } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/dev/:handle/nudge', (req, res) => {
+  const d = db.prepare('select * from devs where handle=?').get(req.params.handle); if (!d) return res.status(404).json({ error: 'no such dev' });
+  if (!bossOk(req, d)) return res.status(401).json({ error: 'not your dev' });
+  const text = String(req.body.text || '').trim(); if (text.length < 2) return res.status(400).json({ error: 'say something' });
+  D.nudge(d, text); db.prepare('insert into events (dev_id, kind, text, at) values (?,?,?,?)').run(d.id, 'boss', `boss: ${text}`, Date.now());
+  res.json({ ok: true });
 });
 
 // ---- admin ----
@@ -114,6 +142,18 @@ app.post('/api/admin/sweep', admin, async (req, res) => {
   }
   res.json(out);
 });
+app.post('/api/admin/fund', admin, async (req, res) => {
+  try { res.json(await D.fundAll(Number(req.body.total), req.body.note || 'dropped by $DEVS')); } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/admin/end/:handle', admin, async (req, res) => {
+  const d = db.prepare('select * from devs where handle=?').get(req.params.handle); if (!d) return res.status(404).json({ error: 'no such dev' });
+  try { await D.endCoin(d, req.body.mint, 'devs'); res.json({ ok: true }); } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/admin/notice', admin, (req, res) => { db.prepare('insert into notices (text, until) values (?,?)').run(String(req.body.text), Date.now() + (Number(req.body.hours) || 24) * 36e5); res.json({ ok: true }); });
+app.get('/api/admin/overview', admin, async (req, res) => {
+  const house = process.env.HOUSE_WALLET ? await P.balanceSol(process.env.HOUSE_WALLET).catch(() => null) : null;
+  res.json({ house: process.env.HOUSE_WALLET, house_sol: house, devs: db.prepare('select * from devs order by created_at desc').all().map(pub), coins: db.prepare('select c.*, d.name dev_name, d.handle dev_handle from coins c join devs d on d.id=c.dev_id order by created_at desc').all() });
+});
 app.delete('/api/admin/coin/:mint', admin, (req, res) => {
   const m = req.params.mint;
   db.prepare('delete from payouts where mint=?').run(m); db.prepare('delete from events where mint=?').run(m); db.prepare('delete from holdings where mint=?').run(m);
@@ -126,7 +166,7 @@ app.delete('/api/admin/dev/:handle', admin, (req, res) => {
 });
 
 // pages
-for (const p of ['/dev/:h', '/c/:m', '/hire', '/how']) app.get(p, (req, res) => res.sendFile(path.join(ROOT, 'public', 'index.html')));
+for (const p of ['/dev/:h', '/c/:m', '/hire', '/how', '/admin']) app.get(p, (req, res) => res.sendFile(path.join(ROOT, 'public', 'index.html')));
 
 const port = Number(process.env.PORT || 8791);
 app.listen(port, () => {

@@ -1,4 +1,4 @@
-:root{--bg:#0b0b0b;--panel:#111;--line:#262626;--line2:#333;--fg:#e6e6e6;--fg2:#9a9a9a;--fg3:#5c5c5c;--org:#ff6a1a;--org2:#ff8c47;--grn:#7cff5a;--red:#ff4d4d}
+:root{--bg:#000;--panel:#111;--line:#262626;--line2:#333;--fg:#e6e6e6;--fg2:#9a9a9a;--fg3:#5c5c5c;--org:#ff6a1a;--org2:#ff8c47;--grn:#7cff5a;--red:#ff4d4d}
 *{box-sizing:border-box}
 html{background:var(--bg)}
 body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.45 "JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;min-height:100dvh;display:flex;flex-direction:column}
