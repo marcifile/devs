@@ -37,7 +37,7 @@ function home() {
       <form class="prompt" id="quick"><span class="gt">&gt;</span><input id="qp" placeholder="a degen that only launches cat coins and never sells before 2x" /><button class="btn org">get a dev</button></form>
       <div class="trust"><span><i data-lucide="lock"></i>split locked on chain</span><span><i data-lucide="wallet"></i>its own wallet</span><span><i data-lucide="percent"></i>${split.boss}% to you</span></div>
     </div>
-    <div class="r photo"><img src="/img/disc-orange.jpg" alt="" /><div class="cap"><b>dedicated virtual dev</b><span>one dev. one wallet. one line from you.</span></div></div>
+    <div class="r photo"><img src="/img/holo-disc.png" alt="" /><div class="cap"><b>dedicated virtual dev</b><span>one dev. one wallet. one line from you.</span></div></div>
   </section>
 
   <section class="panel wide">
