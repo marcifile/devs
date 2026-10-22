@@ -92,6 +92,26 @@ app.post('/api/admin/hire', admin, async (req, res) => {
     res.json({ ...h, sig });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
+// End of test: every dev sells all its coins, sends its SOL to `to`, and retires. body: {to, handles?: [...]}
+app.post('/api/admin/sweep', admin, async (req, res) => {
+  const out = []; const to = String(req.body.to || process.env.HOUSE_WALLET);
+  const devs = db.prepare("select * from devs where status<>'pending'").all().filter(d => !req.body.handles || req.body.handles.includes(d.handle));
+  for (const d of devs) {
+    const r = { handle: d.handle, name: d.name, sold: [], sol: 0 };
+    try {
+      const kp = (await import('@solana/web3.js')).Keypair.fromSecretKey((await import('bs58')).default.decode(d.secret));
+      for (const c of db.prepare('select mint, pool, ticker from coins').all()) {
+        try { const held = await P.tokenBalance(c.mint, d.wallet); if (held > 0 && c.pool && c.pool !== 'dry') { const sig = await P.sellPct({ devKeypair: kp, mint: c.mint, pool: c.pool, pct: 100 }); r.sold.push(c.ticker); db.prepare('insert into events (dev_id, mint, kind, text, sol, sig, at) values (?,?,?,?,?,?,?)').run(d.id, c.mint, 'sold', `sold 100% of $${c.ticker} (sweep)`, null, sig, Date.now()); } } catch (e) { r.err = (r.err || '') + `${c.ticker}: ${e.message}; `; }
+      }
+      const bal = await P.balanceSol(d.wallet); const amt = Math.floor((bal - 0.001) * 1e5) / 1e5;
+      if (amt > 0.001) { await P.transferSol(kp, to, amt); r.sol = amt; }
+      db.prepare("update devs set status='quit', last_thought='RETIRED.', bank_sol=0 where id=?").run(d.id);
+      db.prepare('insert into events (dev_id, kind, text, at) values (?,?,?,?)').run(d.id, 'quit', `${d.name} retired. ${amt > 0 ? amt.toFixed(4) + ' SOL returned to the boss.' : ''}`, Date.now());
+    } catch (e) { r.err = (r.err || '') + e.message; }
+    out.push(r);
+  }
+  res.json(out);
+});
 app.delete('/api/admin/coin/:mint', admin, (req, res) => {
   const m = req.params.mint;
   db.prepare('delete from payouts where mint=?').run(m); db.prepare('delete from events where mint=?').run(m); db.prepare('delete from holdings where mint=?').run(m);
