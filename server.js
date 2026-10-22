@@ -142,6 +142,28 @@ app.post('/api/admin/sweep', admin, async (req, res) => {
   }
   res.json(out);
 });
+// Close empty token accounts and send every last lamport from each dev wallet (and the house) to `to`. body: {to, house?: true}
+app.post('/api/admin/drain', admin, async (req, res) => {
+  const to = String(req.body.to || ''); if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(to)) return res.status(400).json({ error: 'bad destination' });
+  const { Keypair, PublicKey, Transaction } = await import('@solana/web3.js'); const bs58 = (await import('bs58')).default; const { createCloseAccountInstruction } = await import('@solana/spl-token');
+  const TOKEN = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'); const dest = new PublicKey(to);
+  const wallets = db.prepare('select handle, secret from devs').all().map(d => ({ label: d.handle, kp: Keypair.fromSecretKey(bs58.decode(d.secret)) }));
+  const house = P.keypairFromEnv('HOUSE_WALLET_SECRET'); if (req.body.house && house) wallets.push({ label: 'house', kp: house });
+  const out = []; let total = 0;
+  for (const { label, kp } of wallets) {
+    const r = { wallet: label, closed: 0, held: [], sol: 0 };
+    try {
+      const accts = await P.connection().getParsedTokenAccountsByOwner(kp.publicKey, { programId: TOKEN });
+      const empty = accts.value.filter(a => a.account.data.parsed.info.tokenAmount.amount === '0');
+      r.held = accts.value.filter(a => a.account.data.parsed.info.tokenAmount.amount !== '0').map(a => a.account.data.parsed.info.mint);
+      if (empty.length) { const tx = new Transaction(); for (const a of empty) tx.add(createCloseAccountInstruction(a.pubkey, kp.publicKey, kp.publicKey)); r.close_sig = await P.send(tx, [], kp); r.closed = empty.length; }
+      const bal = await P.balanceSol(kp.publicKey.toBase58()); const amt = Math.floor((bal - 0.000005) * 1e9) / 1e9;
+      if (amt > 0.0001) { r.sig = await P.transferSol(kp, dest, amt); r.sol = amt; total += amt; }
+    } catch (e) { r.err = e.message; }
+    out.push(r);
+  }
+  res.json({ to, total, wallets: out });
+});
 app.post('/api/admin/fund', admin, async (req, res) => {
   try { res.json(await D.fundAll(Number(req.body.total), req.body.note || 'dropped by $DVD')); } catch (e) { res.status(500).json({ error: e.message }); }
 });
