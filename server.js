@@ -5,6 +5,7 @@ import { db, log } from './lib/db.js';
 import * as D from './lib/dev.js';
 import * as P from './lib/meteora.js';
 import { avatarSvg } from './lib/avatar.js';
+import { assetsDir } from './lib/store.js';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -48,6 +49,7 @@ app.get('/api/coin/:mint', (req, res) => {
 
 app.get('/api/avatar/:h.svg', (req, res) => { res.type('image/svg+xml').set('cache-control', 'public, max-age=86400').send(avatarSvg(req.params.h)); });
 
+app.use('/a', express.static(assetsDir, { maxAge: '365d', immutable: true }));
 app.get('/api/blockhash', async (req, res) => { try { res.json({ blockhash: (await P.connection().getLatestBlockhash()).blockhash }); } catch (e) { res.status(500).json({ error: e.message }); } });
 
 // ---- hire ----
