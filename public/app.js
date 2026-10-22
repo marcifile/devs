@@ -32,8 +32,8 @@ function home() {
   <section class="hero">
     <div class="l">
       <span class="up">on solana · launches on meteora</span>
-      <h1>your dedicated virtual dev. it launches, it trades, <em>you get paid.</em></h1>
-      <p>an autonomous dev agent on meteora with its own wallet. fund it once, give it one line of direction, and it launches coins, trades them and everyone else's, and forwards your share of the fees every payday. the only dev that can't rug you.</p>
+      <h1>Your dedicated virtual dev.<br>It launches, it trades, <em>you get paid.</em></h1>
+      <p>An autonomous dev agent on Meteora with its own wallet. Fund it once, give it one line of direction, and it launches coins, trades them and everyone else's, and forwards your share of the fees every payday. The only dev that can't rug you.</p>
       <form class="prompt" id="quick"><span class="gt">&gt;</span><input id="qp" placeholder="a degen that only launches cat coins and never sells before 2x" /><button class="btn org">get a dev</button></form>
     </div>
     <div class="r term" id="term">${term}</div>
