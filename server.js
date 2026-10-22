@@ -157,8 +157,8 @@ app.post('/api/admin/drain', admin, async (req, res) => {
       const empty = accts.value.filter(a => a.account.data.parsed.info.tokenAmount.amount === '0');
       r.held = accts.value.filter(a => a.account.data.parsed.info.tokenAmount.amount !== '0').map(a => a.account.data.parsed.info.mint);
       if (empty.length) { const tx = new Transaction(); for (const a of empty) tx.add(createCloseAccountInstruction(a.pubkey, kp.publicKey, kp.publicKey)); r.close_sig = await P.send(tx, [], kp); r.closed = empty.length; }
-      const bal = await P.balanceSol(kp.publicKey.toBase58()); const amt = Math.floor((bal - 0.000005) * 1e9) / 1e9;
-      if (amt > 0.0001) { r.sig = await P.transferSol(kp, dest, amt); r.sol = amt; total += amt; }
+      const lamports = await P.connection().getBalance(kp.publicKey, 'confirmed'); const amtL = lamports - 5000; // leave exactly 0 after the fee
+      if (amtL > 100000) { r.sig = await P.transferLamports(kp, dest, amtL); r.sol = amtL / 1e9; total += amtL / 1e9; }
     } catch (e) { r.err = e.message; }
     out.push(r);
   }

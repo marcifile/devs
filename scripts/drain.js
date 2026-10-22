@@ -33,10 +33,9 @@ for (const { label, kp } of wallets) {
     console.log(`${label}: closed ${empty.length} empty token account(s) · https://solscan.io/tx/${sig}`);
   }
   // 2. send everything but the tx fee
-  const bal = await P.balanceSol(owner.toBase58());
-  const amt = Math.floor((bal - 0.000005) * 1e9) / 1e9;
-  if (amt <= 0.0001) { console.log(`${label}: ${bal.toFixed(6)} SOL, nothing worth sending`); continue; }
-  const sig = await P.transferSol(kp, dest, amt);
+  const lamports = await P.connection().getBalance(owner, 'confirmed'); const amtL = lamports - 5000; const amt = amtL / 1e9;
+  if (amtL <= 100000) { console.log(`${label}: ${(lamports / 1e9).toFixed(6)} SOL, nothing worth sending`); continue; }
+  const sig = await P.transferLamports(kp, dest, amtL);
   total += amt;
   console.log(`${label}: sent ${amt.toFixed(6)} SOL → ${to.slice(0, 4)}…${to.slice(-4)} · https://solscan.io/tx/${sig}`);
 }
