@@ -81,6 +81,17 @@ app.post('/api/admin/payday/:handle', admin, async (req, res) => {
   await D.payday(d); res.json({ ok: true });
 });
 
+// Hire a dev funded from the house wallet (for tests / seeding). body: {persona, sol, boss}
+app.post('/api/admin/hire', admin, async (req, res) => {
+  try {
+    const persona = String(req.body.persona || '').trim(); const sol = Number(req.body.sol) || 0.1;
+    const boss = String(req.body.boss || process.env.HOUSE_WALLET);
+    const house = P.keypairFromEnv('HOUSE_WALLET_SECRET'); if (!house) throw new Error('no house secret');
+    const h = D.pendingHire(boss, persona, sol);
+    const sig = D.DRY ? 'dry' : await P.transferSol(house, h.wallet, sol);
+    res.json({ ...h, sig });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
 app.delete('/api/admin/coin/:mint', admin, (req, res) => {
   const m = req.params.mint;
   db.prepare('delete from payouts where mint=?').run(m); db.prepare('delete from events where mint=?').run(m); db.prepare('delete from holdings where mint=?').run(m);
