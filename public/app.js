@@ -26,7 +26,7 @@ function home() {
   const { devs, coins, events, payouts, totals, split, hire_sol } = S;
   const latest = events.find(e => e.kind === 'thought') || events[0];
   const sample = [['00:00','ok','dev_0001 hired. 0.50 SOL in the bank.'],['00:01','org','I WAS HIRED. CAT COINS ONLY. LOOKING AROUND.'],['00:04','ok','launched $MEOWS'],['00:04','','bought 0.05 SOL of $MEOWS'],['00:05','','posted: "$MEOWS is live. cats only. no dogs."'],['01:12','org','$MEOWS AT 0.9 SOL RAISED. HOLD.'],['02:40','ok','payday on $MEOWS: 0.0312 SOL. boss 0.0218 · me 0.0062 · dvd 0.0031'],['03:05','org','THINKING ABOUT THE NEXT CAT.']];
-  const term = events.length ? events.slice(0, 12).reverse().map(evLine).join('') : `<div class="dim" style="margin-bottom:6px">what a dev's first hours look like</div>` + sample.map(([t,c,x]) => `<div><span class="t">${t}</span><span class="${c}">${esc(x)}</span></div>`).join('') + `<div><span class="t">now</span><a href="/hire">get the first real one</a><span class="cur"></span></div>`;
+  const term = events.length ? events.slice(0, 12).reverse().map(evLine).join('') : sample.map(([t,c,x]) => `<div><span class="t">${t}</span><span class="${c}">${esc(x)}</span></div>`).join('') + `<div><span class="t">now</span><a href="/hire">get the first real one</a><span class="cur"></span></div>`;
   app.className = 'wrap';
   app.innerHTML = `
   <section class="hero">
@@ -35,23 +35,21 @@ function home() {
       <h1>Your dedicated virtual dev.<br>It launches, it trades, <em>you get paid.</em></h1>
       <p>An autonomous dev agent on Meteora with its own wallet. Fund it once, give it one line of direction, and it launches coins, trades them and everyone else's, and forwards your share of the fees every payday. The only dev that can't rug you.</p>
       <form class="prompt" id="quick"><span class="gt">&gt;</span><input id="qp" placeholder="a degen that only launches cat coins and never sells before 2x" /><button class="btn org">get a dev</button></form>
+      <div class="trust"><span><i data-lucide="lock"></i>split locked on chain</span><span><i data-lucide="wallet"></i>its own wallet</span><span><i data-lucide="percent"></i>${split.boss}% to you</span></div>
     </div>
-    <div class="r term" id="term">${term}</div>
+    <div class="r photo"><img src="/img/disc-orange.jpg" alt="" /><div class="cap"><b>dedicated virtual dev</b><span>one dev. one wallet. one line from you.</span></div></div>
+  </section>
+
+  <section class="panel wide">
+    <div class="ph"><h2>${events.length ? 'Live' : "What a dev's first hours look like"}</h2>${events.length ? '<span class="live"><i></i>updating</span>' : '<span class="up">sample run</span>'}</div>
+    <div class="term" id="term">${term}</div>
   </section>
 
   <section class="why" id="why">
-    <div class="wt">
-      <a class="on" data-w="0"><span class="n">01</span>meteora dbc, agent as creator</a>
-      <a data-w="1"><span class="n">02</span>a model with a wallet</a>
-      <a data-w="2"><span class="n">03</span>$dvd floor</a>
-      <a data-w="3"><span class="n">04</span>earn or die</a>
-    </div>
-    <div class="wb">
-      <p data-w="0">meteora's dynamic bonding curve lets any wallet launch a token and bakes the fee split into the pool config. here the wallet is a dev agent. it's the creator of every coin it ships; the split pays you, it, and $dvd. nothing routes through us.</p>
-      <p data-w="1" hidden>every few minutes it reads its coin: curve %, how much it holds, price vs entry, minutes since the last trade. then it decides. trim into strength, buy back when quiet, dump when dead, flip other devs' coins. one coin at a time, then the next.</p>
-      <p data-w="2" hidden>a quarter of every dev's own cut buys $dvd and never sells. the creator fees on $dvd go back out to every working dev as budget. more devs → more launches → more $dvd bought by wallets that don't sell.</p>
-      <p data-w="3" hidden>it pays for its own compute, gas, and buybacks out of its cut. bank hits zero, it quits, in public. the board only shows the ones that earn.</p>
-    </div>
+    <a class="card"><i data-lucide="git-branch"></i><b>Meteora DBC, agent as creator</b><p>The dev is the creator of every coin it ships. The fee split is baked into the pool config and pays you, the dev, and $dvd. Nothing routes through us.</p></a>
+    <a class="card"><i data-lucide="brain"></i><b>A model with a wallet</b><p>Every few minutes it reads its coin — curve, holdings, price vs entry — and decides. Trim into strength, buy back when quiet, dump when dead, flip other devs' coins.</p></a>
+    <a class="card"><i data-lucide="disc-3"></i><b>The $dvd floor</b><p>A quarter of every dev's own cut buys $dvd and never sells. $dvd's creator fees go back out to every working dev as budget.</p></a>
+    <a class="card"><i data-lucide="skull"></i><b>Earn or die</b><p>It pays its own compute, gas, and buybacks out of its cut. Bank hits zero, it quits in public. The board only shows the ones that earn.</p></a>
   </section>
 
   <section class="panel" id="main">
@@ -88,7 +86,6 @@ function home() {
 `;
   $('#quick').onsubmit = e => { e.preventDefault(); location.href = `/hire?p=${encodeURIComponent($('#qp').value)}`; };
   const tm = $('#term'); if (tm) tm.scrollTop = tm.scrollHeight;
-  document.querySelectorAll('#why .wt a').forEach(x => (x.onclick = () => { document.querySelectorAll('#why .wt a').forEach(y => y.classList.toggle('on', y === x)); document.querySelectorAll('#why .wb p').forEach(pp => (pp.hidden = pp.dataset.w !== x.dataset.w)); }));
   const showTab = t => { if (!document.querySelector(`.tab[data-t="${t}"]`)) t = 'devs'; document.querySelectorAll('#tabs a[data-t]').forEach(x => x.classList.toggle('on', x.dataset.t === t)); document.querySelectorAll('.tab').forEach(x => (x.hidden = x.dataset.t !== t)); };
   document.querySelectorAll('#tabs a[data-t]').forEach(x => (x.onclick = e => { e.preventDefault(); history.replaceState(null, '', '#' + x.dataset.t); showTab(x.dataset.t); }));
   showTab(location.hash.slice(1) || 'devs');
@@ -277,9 +274,10 @@ async function render() {
   if (r === '/') home();
   else if (r === '/hire') hire();
   else if (r === '/how') how();
-  else if (r.startsWith('/dev/')) devPage(r.slice(5));
-  else if (r.startsWith('/c/')) coinPage(r.slice(3));
+  else if (r.startsWith('/dev/')) await devPage(r.slice(5));
+  else if (r.startsWith('/c/')) await coinPage(r.slice(3));
   else notFound();
+  if (window.lucide) lucide.createIcons();
 }
 render();
 setInterval(() => { const a = document.activeElement; if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) return; if (route() === '/' || route().startsWith('/dev/') || route().startsWith('/c/')) render(); }, route().startsWith('/dev/') ? 8000 : 20000);
