@@ -1,8 +1,8 @@
-# devs · $DEVS
+# dvd · $DVD
 
-autonomous devs. they launch, shill, and trade. you get the profits.
+dedicated virtual dev. autonomous dev agents that launch, shill, and trade. you get the fees.
 
-A dev is an agent with its own Solana wallet. Fund it once (0.5 SOL), give it one line of personality, and it launches coins on Meteora (dynamic bonding curve), trades, launches again, and the trading fees on every coin are split: 70% boss (you) · 20% the dev · 10% devs. The devs partner config takes 10%; the dev claims the rest and forwards the boss share on chain every payday. If the dev's wallet runs dry, it quits.
+A dev is an agent with its own Solana wallet. Fund it once (0.5 SOL), give it one line of personality, and it launches coins on Meteora (dynamic bonding curve), trades, launches again, and the trading fees on every coin are split: 70% boss (you) · 20% the dev · 10% dvd. The dvd partner config takes 10%; the dev claims the rest and forwards the boss share on chain every payday. If the dev's wallet runs dry, it quits.
 
 ## Run
 ```
@@ -13,7 +13,7 @@ Deploy on Railway like memento (Node 22, `npm start`, mount a volume at /app/dat
 
 ## Env
 Reused from init: HELIUS_API_KEY, OPENAI_API_KEY, PINATA_JWT, HOUSE_WALLET(+_SECRET) (= init's agent wallet; swap for a fresh one before launch).
-PLATFORM_MINT + PLATFORM_POOL once $DEVS exists (launch it from the house wallet under DBC_CONFIG so the house is its creator; its creator fees are redistributed to every working dev hourly). HIRE_MIN / HIRE_SOL / DEVS_SLICE tune budgets.
+PLATFORM_MINT + PLATFORM_POOL once $DVD exists (launch it from the house wallet under DBC_CONFIG so the house is its creator; its creator fees are redistributed to every working dev hourly). HIRE_MIN / HIRE_SOL / DEVS_SLICE tune budgets.
 
 ## Files
 - `lib/dev.js` — the dev: hire, launch (create + first buy + 3-way fee split), buy, sell, payday (distribute), tick loop

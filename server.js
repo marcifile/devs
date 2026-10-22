@@ -143,11 +143,11 @@ app.post('/api/admin/sweep', admin, async (req, res) => {
   res.json(out);
 });
 app.post('/api/admin/fund', admin, async (req, res) => {
-  try { res.json(await D.fundAll(Number(req.body.total), req.body.note || 'dropped by $DEVS')); } catch (e) { res.status(500).json({ error: e.message }); }
+  try { res.json(await D.fundAll(Number(req.body.total), req.body.note || 'dropped by $DVD')); } catch (e) { res.status(500).json({ error: e.message }); }
 });
 app.post('/api/admin/end/:handle', admin, async (req, res) => {
   const d = db.prepare('select * from devs where handle=?').get(req.params.handle); if (!d) return res.status(404).json({ error: 'no such dev' });
-  try { await D.endCoin(d, req.body.mint, 'devs'); res.json({ ok: true }); } catch (e) { res.status(500).json({ error: e.message }); }
+  try { await D.endCoin(d, req.body.mint, 'dvd'); res.json({ ok: true }); } catch (e) { res.status(500).json({ error: e.message }); }
 });
 app.post('/api/admin/notice', admin, (req, res) => { db.prepare('insert into notices (text, until) values (?,?)').run(String(req.body.text), Date.now() + (Number(req.body.hours) || 24) * 36e5); res.json({ ok: true }); });
 app.get('/api/admin/overview', admin, async (req, res) => {
@@ -170,6 +170,6 @@ for (const p of ['/dev/:h', '/c/:m', '/hire', '/how', '/admin']) app.get(p, (req
 
 const port = Number(process.env.PORT || 8791);
 app.listen(port, () => {
-  console.log(`devs on http://localhost:${port} · split boss ${D.BOSS_BPS / 100}% dev ${D.DEV_BPS / 100}% house ${D.HOUSE_BPS / 100}% · meteora config ${process.env.DBC_CONFIG ? 'set' : 'MISSING (run scripts/partner-config.js)'} · rpc ${P.rpcState().using}`);
+  console.log(`dvd on http://localhost:${port} · split boss ${D.BOSS_BPS / 100}% dev ${D.DEV_BPS / 100}% house ${D.HOUSE_BPS / 100}% · meteora config ${process.env.DBC_CONFIG ? 'set' : 'MISSING (run scripts/partner-config.js)'} · rpc ${P.rpcState().using}`);
   D.startLoop();
 });

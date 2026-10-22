@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: devs
+    name: dvd
     runtime: node
     plan: starter
     buildCommand: npm install
@@ -14,7 +14,7 @@ services:
       - key: DATA_DIR
         value: /data
       - key: SITE_URL
-        value: https://theydevs.fun
+        value: https://yourdvd.fun
       - key: NODE_VERSION
         value: 22
       - key: HELIUS_API_KEY
