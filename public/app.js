@@ -229,7 +229,7 @@ async function coinPage(mint) {
       </div>
       <p class="note">fee split on this coin: ${S.split.boss}% boss · ${S.split.dev}% ${esc(c.dev_name)} · ${S.split.house}% devs. the dev's persona: "${esc(c.persona)}"</p>
     </div>
-    <div class="r chart">${real ? `<div class="chartph"><span class="up">loading chart from dexscreener<span class="cur"></span></span><a href="https://dexscreener.com/solana/${c.pool}" target="_blank" rel="noreferrer">open it there if it's slow →</a></div><iframe src="https://dexscreener.com/solana/${c.pool}?embed=1&theme=dark&trades=1&info=0" title="chart"></iframe>` : `<div class="term" style="padding:20px 22px">${events.slice(0, 14).reverse().map(evLine).join('') || '<div class="dim">nothing yet.</div>'}</div>`}</div>
+    <div class="r chart" id="chart">${real ? spark(c, sol_usd) + `<div class="chartbar"><span class="up">price · sampled every tick</span><a id="dsx" href="#">load dexscreener chart + trades</a></div>` : `<div class="term" style="padding:20px 22px">${events.slice(0, 14).reverse().map(evLine).join('') || '<div class="dim">nothing yet.</div>'}</div>`}</div>
   </section>
   <section class="panel">
     <div class="ph"><h2>WHAT THE DEV DID</h2><span class="up">${trades.length} moves</span></div>
@@ -237,6 +237,22 @@ async function coinPage(mint) {
   </section>
   <aside><div class="panel"><div class="ph"><h2>${esc(c.dev_name.toUpperCase())}'S HEAD</h2><span class="up">every decision on this coin</span></div><div class="feed tall">${brain.map(evLine).join('') || '<div class="dim">no decisions yet.</div>'}</div></div></aside>`;
   $('#cpy').onclick = () => { navigator.clipboard.writeText(c.mint); $('#cpy').textContent = 'copied'; };
+  const dsx = $('#dsx'); if (dsx) dsx.onclick = e => { e.preventDefault(); $('#chart').innerHTML = `<iframe src="https://dexscreener.com/solana/${c.pool}?embed=1&theme=dark&trades=1&info=0" title="chart"></iframe>`; };
+}
+
+// Our own chart from the server's price samples: instant, no third party.
+function spark(c, usd) {
+  let h = []; try { h = JSON.parse(c.hist || '[]'); } catch {}
+  const pts = h.filter(p => p[2] > 0);
+  if (pts.length < 2) return `<div class="spark empty"><b>CHART WARMS UP AFTER A FEW TICKS.</b>the dev samples price every ~2 minutes.</div>`;
+  const W = 600, H = 300, pad = 10;
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[2] * 1e9 * usd); // market cap in usd
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys) * 0.97, y1 = Math.max(...ys) * 1.03;
+  const X = t => pad + ((t - x0) / Math.max(1, x1 - x0)) * (W - pad * 2), Y = v => H - pad - ((v - y0) / Math.max(1e-9, y1 - y0)) * (H - pad * 2);
+  const d = pts.map((p, i) => `${i ? 'L' : 'M'}${X(p[0]).toFixed(1)},${Y(p[2] * 1e9 * usd).toFixed(1)}`).join(' ');
+  const last = ys[ys.length - 1], first = ys[0], up = last >= first;
+  const fmt = v => v >= 1e6 ? `$${(v / 1e6).toFixed(2)}m` : v >= 1e3 ? `$${(v / 1e3).toFixed(1)}k` : `$${v.toFixed(0)}`;
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${up ? '#4ade80' : '#f87171'}" stop-opacity=".25"/><stop offset="1" stop-color="${up ? '#4ade80' : '#f87171'}" stop-opacity="0"/></linearGradient></defs><path d="${d} L${X(x1).toFixed(1)},${H} L${X(x0).toFixed(1)},${H} Z" fill="url(#g)"/><path d="${d}" fill="none" stroke="${up ? '#4ade80' : '#f87171'}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg><div class="sparkk"><span>${fmt(first)}</span><b class="${up ? 'pos' : 'neg'}">${fmt(last)} mcap · ${((last / first - 1) * 100).toFixed(1)}%</b><span>${hhmm(x1)}</span></div>`;
 }
 
 function how() {
